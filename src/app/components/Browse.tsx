@@ -152,7 +152,13 @@ export default function Browse() {
         )}
       </main>
 
-      <FloatingActionButton />
+      <Link
+        to="/create-request"
+        aria-label="Create request"
+        className="fixed right-5 bottom-24 z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95"
+      >
+        <Plus className="h-6 w-6" />
+      </Link>
       <BottomNav activeId="explore" />
     </MobileShell>
   );
