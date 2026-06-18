@@ -10,13 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyAddressRouteImport } from './routes/verify-address'
+import { Route as ProfileSetupRouteImport } from './routes/profile-setup'
 import { Route as PatternsRouteImport } from './routes/patterns'
+import { Route as LocationRouteImport } from './routes/location'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VerifyAddressSubmittedRouteImport } from './routes/verify-address.submitted'
+import { Route as LocationScanningRouteImport } from './routes/location.scanning'
+import { Route as LocationClusterRouteImport } from './routes/location.cluster'
 
 const VerifyAddressRoute = VerifyAddressRouteImport.update({
   id: '/verify-address',
   path: '/verify-address',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileSetupRoute = ProfileSetupRouteImport.update({
+  id: '/profile-setup',
+  path: '/profile-setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PatternsRoute = PatternsRouteImport.update({
@@ -24,9 +35,19 @@ const PatternsRoute = PatternsRouteImport.update({
   path: '/patterns',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocationRoute = LocationRouteImport.update({
+  id: '/location',
+  path: '/location',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -34,39 +55,106 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifyAddressSubmittedRoute = VerifyAddressSubmittedRouteImport.update({
+  id: '/submitted',
+  path: '/submitted',
+  getParentRoute: () => VerifyAddressRoute,
+} as any)
+const LocationScanningRoute = LocationScanningRouteImport.update({
+  id: '/scanning',
+  path: '/scanning',
+  getParentRoute: () => LocationRoute,
+} as any)
+const LocationClusterRoute = LocationClusterRouteImport.update({
+  id: '/cluster',
+  path: '/cluster',
+  getParentRoute: () => LocationRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/home': typeof HomeRoute
+  '/location': typeof LocationRouteWithChildren
   '/patterns': typeof PatternsRoute
-  '/verify-address': typeof VerifyAddressRoute
+  '/profile-setup': typeof ProfileSetupRoute
+  '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/location/cluster': typeof LocationClusterRoute
+  '/location/scanning': typeof LocationScanningRoute
+  '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/home': typeof HomeRoute
+  '/location': typeof LocationRouteWithChildren
   '/patterns': typeof PatternsRoute
-  '/verify-address': typeof VerifyAddressRoute
+  '/profile-setup': typeof ProfileSetupRoute
+  '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/location/cluster': typeof LocationClusterRoute
+  '/location/scanning': typeof LocationScanningRoute
+  '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/home': typeof HomeRoute
+  '/location': typeof LocationRouteWithChildren
   '/patterns': typeof PatternsRoute
-  '/verify-address': typeof VerifyAddressRoute
+  '/profile-setup': typeof ProfileSetupRoute
+  '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/location/cluster': typeof LocationClusterRoute
+  '/location/scanning': typeof LocationScanningRoute
+  '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/home' | '/patterns' | '/verify-address'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/home'
+    | '/location'
+    | '/patterns'
+    | '/profile-setup'
+    | '/verify-address'
+    | '/location/cluster'
+    | '/location/scanning'
+    | '/verify-address/submitted'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/home' | '/patterns' | '/verify-address'
-  id: '__root__' | '/' | '/home' | '/patterns' | '/verify-address'
+  to:
+    | '/'
+    | '/auth'
+    | '/home'
+    | '/location'
+    | '/patterns'
+    | '/profile-setup'
+    | '/verify-address'
+    | '/location/cluster'
+    | '/location/scanning'
+    | '/verify-address/submitted'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/home'
+    | '/location'
+    | '/patterns'
+    | '/profile-setup'
+    | '/verify-address'
+    | '/location/cluster'
+    | '/location/scanning'
+    | '/verify-address/submitted'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   HomeRoute: typeof HomeRoute
+  LocationRoute: typeof LocationRouteWithChildren
   PatternsRoute: typeof PatternsRoute
-  VerifyAddressRoute: typeof VerifyAddressRoute
+  ProfileSetupRoute: typeof ProfileSetupRoute
+  VerifyAddressRoute: typeof VerifyAddressRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -78,11 +166,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyAddressRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile-setup': {
+      id: '/profile-setup'
+      path: '/profile-setup'
+      fullPath: '/profile-setup'
+      preLoaderRoute: typeof ProfileSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/patterns': {
       id: '/patterns'
       path: '/patterns'
       fullPath: '/patterns'
       preLoaderRoute: typeof PatternsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/location': {
+      id: '/location'
+      path: '/location'
+      fullPath: '/location'
+      preLoaderRoute: typeof LocationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -92,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -99,14 +208,64 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verify-address/submitted': {
+      id: '/verify-address/submitted'
+      path: '/submitted'
+      fullPath: '/verify-address/submitted'
+      preLoaderRoute: typeof VerifyAddressSubmittedRouteImport
+      parentRoute: typeof VerifyAddressRoute
+    }
+    '/location/scanning': {
+      id: '/location/scanning'
+      path: '/scanning'
+      fullPath: '/location/scanning'
+      preLoaderRoute: typeof LocationScanningRouteImport
+      parentRoute: typeof LocationRoute
+    }
+    '/location/cluster': {
+      id: '/location/cluster'
+      path: '/cluster'
+      fullPath: '/location/cluster'
+      preLoaderRoute: typeof LocationClusterRouteImport
+      parentRoute: typeof LocationRoute
+    }
   }
 }
 
+interface LocationRouteChildren {
+  LocationClusterRoute: typeof LocationClusterRoute
+  LocationScanningRoute: typeof LocationScanningRoute
+}
+
+const LocationRouteChildren: LocationRouteChildren = {
+  LocationClusterRoute: LocationClusterRoute,
+  LocationScanningRoute: LocationScanningRoute,
+}
+
+const LocationRouteWithChildren = LocationRoute._addFileChildren(
+  LocationRouteChildren,
+)
+
+interface VerifyAddressRouteChildren {
+  VerifyAddressSubmittedRoute: typeof VerifyAddressSubmittedRoute
+}
+
+const VerifyAddressRouteChildren: VerifyAddressRouteChildren = {
+  VerifyAddressSubmittedRoute: VerifyAddressSubmittedRoute,
+}
+
+const VerifyAddressRouteWithChildren = VerifyAddressRoute._addFileChildren(
+  VerifyAddressRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   HomeRoute: HomeRoute,
+  LocationRoute: LocationRouteWithChildren,
   PatternsRoute: PatternsRoute,
-  VerifyAddressRoute: VerifyAddressRoute,
+  ProfileSetupRoute: ProfileSetupRoute,
+  VerifyAddressRoute: VerifyAddressRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

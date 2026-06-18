@@ -147,13 +147,13 @@ export function AddressVerification() {
         </div>
 
         {/* Submit */}
-        <button
-          type="button"
+        <Link
+          to="/verify-address/submitted"
           className="mt-5 w-full h-13 py-3.5 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition shadow-sm"
         >
           <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.2} />
           Apply for Verification
-        </button>
+        </Link>
 
         <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="h-3 w-3" strokeWidth={2.2} />

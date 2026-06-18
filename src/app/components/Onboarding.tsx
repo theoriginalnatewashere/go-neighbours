@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Users, ShieldCheck, MessageCircle, type LucideIcon } from "lucide-react";
 
 export const features = [
@@ -88,13 +89,19 @@ export function Onboarding() {
         </ul>
 
         <div className="mt-8 space-y-3">
-          <button className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-medium text-[15px] active:scale-[0.99] transition shadow-sm">
+          <Link
+            to="/auth"
+            className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-medium text-[15px] flex items-center justify-center active:scale-[0.99] transition shadow-sm"
+          >
             Get Started
-          </button>
-          <button className="w-full h-12 rounded-2xl bg-card border border-border text-foreground font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition">
+          </Link>
+          <Link
+            to="/auth"
+            className="w-full h-12 rounded-2xl bg-card border border-border text-foreground font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition"
+          >
             <GoogleIcon />
             Continue with Google
-          </button>
+          </Link>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
