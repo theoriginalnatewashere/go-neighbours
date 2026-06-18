@@ -240,8 +240,8 @@ export type NavItem = {
 };
 
 export const defaultNavItems: NavItem[] = [
-  { id: "home", label: "Home", to: "/", icon: Home },
-  { id: "explore", label: "Explore", to: "/explore", icon: Search },
+  { id: "home", label: "Home", to: "/home", icon: Home },
+  { id: "explore", label: "Browse", to: "/browse", icon: Search },
   { id: "messages", label: "Messages", to: "/messages", icon: MessageCircle },
   { id: "profile", label: "Profile", to: "/profile", icon: User },
 ];
