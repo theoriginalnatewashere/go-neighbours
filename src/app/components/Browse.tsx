@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, SlidersHorizontal } from "lucide-react";
 import {
   BottomNav,
   CategoryFilter,
-  FloatingActionButton,
   PostCard,
   type Category,
   type Post,
