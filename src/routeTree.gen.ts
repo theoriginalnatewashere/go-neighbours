@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyAddressRouteImport } from './routes/verify-address'
+import { Route as PatternsRouteImport } from './routes/patterns'
 import { Route as IndexRouteImport } from './routes/index'
 
 const VerifyAddressRoute = VerifyAddressRouteImport.update({
   id: '/verify-address',
   path: '/verify-address',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatternsRoute = PatternsRouteImport.update({
+  id: '/patterns',
+  path: '/patterns',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/patterns': typeof PatternsRoute
   '/verify-address': typeof VerifyAddressRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/patterns': typeof PatternsRoute
   '/verify-address': typeof VerifyAddressRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/patterns': typeof PatternsRoute
   '/verify-address': typeof VerifyAddressRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/verify-address'
+  fullPaths: '/' | '/patterns' | '/verify-address'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/verify-address'
-  id: '__root__' | '/' | '/verify-address'
+  to: '/' | '/patterns' | '/verify-address'
+  id: '__root__' | '/' | '/patterns' | '/verify-address'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PatternsRoute: typeof PatternsRoute
   VerifyAddressRoute: typeof VerifyAddressRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-address'
       fullPath: '/verify-address'
       preLoaderRoute: typeof VerifyAddressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patterns': {
+      id: '/patterns'
+      path: '/patterns'
+      fullPath: '/patterns'
+      preLoaderRoute: typeof PatternsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PatternsRoute: PatternsRoute,
   VerifyAddressRoute: VerifyAddressRoute,
 }
 export const routeTree = rootRouteImport
