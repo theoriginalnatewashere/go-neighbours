@@ -4,6 +4,7 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { getRedirectForUser } from "@/lib/profileRouting";
 
 type Mode = "signup" | "login";
 
