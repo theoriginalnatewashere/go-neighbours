@@ -1,5 +1,8 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, LogOut, MapPin, Settings, Shield, Star } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { BottomNav, NeighborAvatar, TrustBadge } from "./patterns";
 import { MobileShell } from "./patterns/shell";
 
