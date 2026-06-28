@@ -87,6 +87,7 @@ export default function UserProfile() {
 
         <button
           type="button"
+          onClick={handleSignOut}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-medium text-destructive shadow-sm hover:bg-secondary"
         >
           <LogOut className="h-4 w-4" /> Sign out
