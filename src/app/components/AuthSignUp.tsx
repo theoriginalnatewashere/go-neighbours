@@ -33,21 +33,22 @@ export function AuthSignUp() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/home` },
+          options: { emailRedirectTo: `${window.location.origin}/location` },
         });
         if (error) throw error;
-        if (data.session) {
-          toast.success("Account created. Welcome!");
-          navigate({ to: "/home" });
+        if (data.session && data.user) {
+          toast.success("Account created. Let's set up your profile.");
+          navigate({ to: "/location" });
         } else {
           toast.success("Check your email to confirm your account.");
           setMode("login");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in");
-        navigate({ to: "/home" });
+        const dest = data.user ? await getRedirectForUser(data.user.id) : "/home";
+        navigate({ to: dest });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
