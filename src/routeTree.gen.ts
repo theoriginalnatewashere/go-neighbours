@@ -16,11 +16,11 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PatternsRouteImport } from './routes/patterns'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LocationRouteImport } from './routes/location'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as CreateRequestRouteImport } from './routes/create-request'
 import { Route as CreateOfferRouteImport } from './routes/create-offer'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerifyAddressSubmittedRouteImport } from './routes/verify-address.submitted'
 import { Route as RequestIdRouteImport } from './routes/request.$id'
@@ -28,6 +28,7 @@ import { Route as NeighborIdRouteImport } from './routes/neighbor.$id'
 import { Route as LocationScanningRouteImport } from './routes/location.scanning'
 import { Route as LocationClusterRouteImport } from './routes/location.cluster'
 import { Route as ChatIdRouteImport } from './routes/chat.$id'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 
 const VerifyAddressRoute = VerifyAddressRouteImport.update({
   id: '/verify-address',
@@ -64,11 +65,6 @@ const LocationRoute = LocationRouteImport.update({
   path: '/location',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CreateRequestRoute = CreateRequestRouteImport.update({
   id: '/create-request',
   path: '/create-request',
@@ -87,6 +83,10 @@ const BrowseRoute = BrowseRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -124,6 +124,11 @@ const ChatIdRoute = ChatIdRouteImport.update({
   path: '/chat/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,7 +136,6 @@ export interface FileRoutesByFullPath {
   '/browse': typeof BrowseRoute
   '/create-offer': typeof CreateOfferRoute
   '/create-request': typeof CreateRequestRoute
-  '/home': typeof HomeRoute
   '/location': typeof LocationRouteWithChildren
   '/messages': typeof MessagesRoute
   '/patterns': typeof PatternsRoute
@@ -139,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/home': typeof AuthenticatedHomeRoute
   '/chat/$id': typeof ChatIdRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
@@ -152,7 +157,6 @@ export interface FileRoutesByTo {
   '/browse': typeof BrowseRoute
   '/create-offer': typeof CreateOfferRoute
   '/create-request': typeof CreateRequestRoute
-  '/home': typeof HomeRoute
   '/location': typeof LocationRouteWithChildren
   '/messages': typeof MessagesRoute
   '/patterns': typeof PatternsRoute
@@ -160,6 +164,7 @@ export interface FileRoutesByTo {
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/home': typeof AuthenticatedHomeRoute
   '/chat/$id': typeof ChatIdRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
@@ -170,11 +175,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/create-offer': typeof CreateOfferRoute
   '/create-request': typeof CreateRequestRoute
-  '/home': typeof HomeRoute
   '/location': typeof LocationRouteWithChildren
   '/messages': typeof MessagesRoute
   '/patterns': typeof PatternsRoute
@@ -182,6 +187,7 @@ export interface FileRoutesById {
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/chat/$id': typeof ChatIdRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
@@ -197,7 +203,6 @@ export interface FileRouteTypes {
     | '/browse'
     | '/create-offer'
     | '/create-request'
-    | '/home'
     | '/location'
     | '/messages'
     | '/patterns'
@@ -205,6 +210,7 @@ export interface FileRouteTypes {
     | '/profile-setup'
     | '/success'
     | '/verify-address'
+    | '/home'
     | '/chat/$id'
     | '/location/cluster'
     | '/location/scanning'
@@ -218,7 +224,6 @@ export interface FileRouteTypes {
     | '/browse'
     | '/create-offer'
     | '/create-request'
-    | '/home'
     | '/location'
     | '/messages'
     | '/patterns'
@@ -226,6 +231,7 @@ export interface FileRouteTypes {
     | '/profile-setup'
     | '/success'
     | '/verify-address'
+    | '/home'
     | '/chat/$id'
     | '/location/cluster'
     | '/location/scanning'
@@ -235,11 +241,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/auth'
     | '/browse'
     | '/create-offer'
     | '/create-request'
-    | '/home'
     | '/location'
     | '/messages'
     | '/patterns'
@@ -247,6 +253,7 @@ export interface FileRouteTypes {
     | '/profile-setup'
     | '/success'
     | '/verify-address'
+    | '/_authenticated/home'
     | '/chat/$id'
     | '/location/cluster'
     | '/location/scanning'
@@ -257,11 +264,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BrowseRoute: typeof BrowseRoute
   CreateOfferRoute: typeof CreateOfferRoute
   CreateRequestRoute: typeof CreateRequestRoute
-  HomeRoute: typeof HomeRoute
   LocationRoute: typeof LocationRouteWithChildren
   MessagesRoute: typeof MessagesRoute
   PatternsRoute: typeof PatternsRoute
@@ -325,13 +332,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/create-request': {
       id: '/create-request'
       path: '/create-request'
@@ -358,6 +358,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -409,8 +416,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface LocationRouteChildren {
   LocationClusterRoute: typeof LocationClusterRoute
@@ -440,11 +465,11 @@ const VerifyAddressRouteWithChildren = VerifyAddressRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BrowseRoute: BrowseRoute,
   CreateOfferRoute: CreateOfferRoute,
   CreateRequestRoute: CreateRequestRoute,
-  HomeRoute: HomeRoute,
   LocationRoute: LocationRouteWithChildren,
   MessagesRoute: MessagesRoute,
   PatternsRoute: PatternsRoute,
@@ -459,13 +484,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
