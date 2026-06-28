@@ -29,14 +29,19 @@ export function AuthSignUp() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/home` },
         });
         if (error) throw error;
-        toast.success("Account created. Welcome!");
-        navigate({ to: "/home" });
+        if (data.session) {
+          toast.success("Account created. Welcome!");
+          navigate({ to: "/home" });
+        } else {
+          toast.success("Check your email to confirm your account.");
+          setMode("login");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
