@@ -77,7 +77,7 @@ export default function UserProfile() {
 
       <main className="flex-1 space-y-4 px-4 pb-28">
         <section className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <NeighborAvatar name={name} image={profile?.avatar_url ?? undefined} size="lg" verified={!!profile?.onboarding_completed} />
+          <NeighborAvatar name={name} src={profile?.avatar_url ?? undefined} size="lg" verified={!!profile?.onboarding_completed} />
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-base font-semibold">{name}</h2>
             <p className="truncate text-xs text-muted-foreground">{location}</p>
