@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, MapPin, Plus, Search } from "lucide-react";
+import { Bell, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
 import {
   BottomNav,
   CategoryFilter,
-  PostCard,
   SafetyCard,
   TrustBadge,
   type Category,
-  type Post,
 } from "./patterns";
 
 const categories: Category[] = [
@@ -20,47 +18,6 @@ const categories: Category[] = [
   { id: "share", label: "Share" },
 ];
 
-const posts: Post[] = [
-  {
-    id: "1",
-    author: { name: "Amina Yusuf", verified: true },
-    category: "Asks for help",
-    timeAgo: "12 min ago",
-    title: "Anyone have a ladder I can borrow this weekend?",
-    body: "Need to swap a lightbulb in the stairwell — would return it Sunday evening. Thanks neighbours!",
-    likes: 8,
-    comments: 4,
-  },
-  {
-    id: "2",
-    author: { name: "Diego Romero", verified: true },
-    category: "Offers",
-    timeAgo: "1 h ago",
-    title: "Free sourdough starter — D18",
-    body: "Made too much again. Drop me a message and I'll leave a jar by the mailboxes.",
-    likes: 21,
-    comments: 6,
-  },
-  {
-    id: "3",
-    author: { name: "Lin Park" },
-    category: "Events",
-    timeAgo: "3 h ago",
-    title: "Rooftop coffee Saturday at 10",
-    body: "Bringing a thermos and pastries. Come say hi if you're around — kids and dogs welcome.",
-    likes: 34,
-    comments: 12,
-  },
-  {
-    id: "4",
-    author: { name: "Maya Brouwer", verified: true },
-    category: "Lost & found",
-    timeAgo: "Yesterday",
-    body: "Found a small grey cat near the bike racks. Friendly, no collar. Sheltering at #3B until owner shows up.",
-    likes: 14,
-    comments: 9,
-  },
-];
 
 export default function EnhancedHome() {
   const [activeCategory, setActiveCategory] = useState("all");
