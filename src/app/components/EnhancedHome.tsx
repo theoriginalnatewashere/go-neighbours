@@ -22,15 +22,6 @@ const categories: Category[] = [
 export default function EnhancedHome() {
   const [activeCategory, setActiveCategory] = useState("all");
 
-  const filtered =
-    activeCategory === "all"
-      ? posts
-      : posts.filter((p) =>
-          p.category?.toLowerCase().startsWith(
-            categories.find((c) => c.id === activeCategory)?.label.toLowerCase().slice(0, 4) ?? "",
-          ),
-        );
-
   return (
     <div className="relative mx-auto flex min-h-screen w-[393px] max-w-full flex-col bg-background">
       {/* Top bar */}
@@ -79,22 +70,36 @@ export default function EnhancedHome() {
       </div>
 
       {/* Feed */}
-      <main className="flex-1 space-y-3 px-4 pb-28">
+      <main className="flex flex-1 flex-col gap-3 px-4 pb-28">
         <SafetyCard title="Stay safe & kind">
           Meet new neighbours in shared spaces and never share keys or payment
           details over chat.
         </SafetyCard>
 
-        {filtered.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-
-        {filtered.length === 0 && (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            Nothing here yet — be the first to post in this category.
-          </p>
-        )}
+        {/* Empty state */}
+        <div className="flex flex-1 items-center justify-center py-10">
+          <div className="flex w-full max-w-sm flex-col items-center rounded-3xl border border-dashed border-border bg-card/60 px-6 py-10 text-center shadow-sm">
+            <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <MessageSquarePlus className="h-7 w-7" />
+            </span>
+            <h2 className="text-base font-semibold text-foreground">
+              Nothing here yet
+            </h2>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+              Be the first to share an update, ask a question, or connect with
+              your neighbours.
+            </p>
+            <Link
+              to="/create-request"
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Plus className="h-4 w-4" />
+              Create a post
+            </Link>
+          </div>
+        </div>
       </main>
+
 
       <Link
         to="/create-request"
