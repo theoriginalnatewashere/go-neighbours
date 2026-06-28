@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import EnhancedHome from "@/app/components/EnhancedHome";
 
-export const Route = createFileRoute("/home")({
+export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
       { title: "Home feed — Go Neighbours" },
