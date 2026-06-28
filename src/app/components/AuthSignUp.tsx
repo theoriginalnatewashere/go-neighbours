@@ -70,7 +70,9 @@ export function AuthSignUp() {
         return;
       }
       if (result.redirected) return;
-      navigate({ to: "/home" });
+      const { data: userData } = await supabase.auth.getUser();
+      const dest = userData.user ? await getRedirectForUser(userData.user.id) : "/location";
+      navigate({ to: dest });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
