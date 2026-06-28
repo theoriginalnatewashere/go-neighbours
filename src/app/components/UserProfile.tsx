@@ -1,5 +1,8 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, LogOut, MapPin, Settings, Shield, Star } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { BottomNav, NeighborAvatar, TrustBadge } from "./patterns";
 import { MobileShell } from "./patterns/shell";
 
@@ -16,6 +19,16 @@ const rows = [
 ];
 
 export default function UserProfile() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    navigate({ to: "/auth", replace: true });
+  }
   return (
     <MobileShell>
       <header className="sticky top-0 z-20 bg-background/85 px-4 pt-4 pb-3 backdrop-blur">
@@ -74,6 +87,7 @@ export default function UserProfile() {
 
         <button
           type="button"
+          onClick={handleSignOut}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-medium text-destructive shadow-sm hover:bg-secondary"
         >
           <LogOut className="h-4 w-4" /> Sign out
