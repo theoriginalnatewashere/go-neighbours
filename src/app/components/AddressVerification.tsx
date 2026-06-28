@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Building2,
   DoorOpen,
+  Loader2,
   MapPin,
   ShieldCheck,
   Clock,
@@ -12,6 +13,8 @@ import {
   Info,
   type LucideIcon,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface FieldProps {
   label: string;
@@ -20,21 +23,21 @@ interface FieldProps {
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
+  required?: boolean;
 }
 
-function Field({ label, optional, icon: Icon, placeholder, value, onChange }: FieldProps) {
+function Field({ label, optional, icon: Icon, placeholder, value, onChange, required }: FieldProps) {
   return (
     <div className="space-y-1.5">
       <label className="text-sm font-semibold text-foreground">
         {label}
-        {optional && (
-          <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
-        )}
+        {optional && <span className="ml-1 font-normal text-muted-foreground">(optional)</span>}
       </label>
       <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3.5 h-12 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition">
         <Icon className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={2} />
         <input
           type="text"
+          required={required}
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -45,13 +48,7 @@ function Field({ label, optional, icon: Icon, placeholder, value, onChange }: Fi
   );
 }
 
-interface InfoRowProps {
-  icon: LucideIcon;
-  title: string;
-  desc: string;
-}
-
-function InfoRow({ icon: Icon, title, desc }: InfoRowProps) {
+function InfoRow({ icon: Icon, title, desc }: { icon: LucideIcon; title: string; desc: string }) {
   return (
     <div className="flex gap-3 items-start py-3">
       <div className="h-10 w-10 shrink-0 rounded-full bg-secondary flex items-center justify-center">
@@ -66,17 +63,78 @@ function InfoRow({ icon: Icon, title, desc }: InfoRowProps) {
 }
 
 export function AddressVerification() {
+  const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | null>(null);
   const [building, setBuilding] = useState("");
   const [room, setRoom] = useState("");
   const [address, setAddress] = useState("");
+  const [neighbourhood, setNeighbourhood] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      setUserId(u.user.id);
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("building, room, address, neighbourhood")
+        .eq("id", u.user.id)
+        .maybeSingle();
+      if (p) {
+        setBuilding(p.building ?? "");
+        setRoom(p.room ?? "");
+        setAddress(p.address ?? "");
+        setNeighbourhood(p.neighbourhood ?? "");
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!userId || saving) return;
+    if (!address.trim() || !neighbourhood.trim()) {
+      toast.error("Neighbourhood and address are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          building: building.trim() || null,
+          room: room.trim() || null,
+          address: address.trim(),
+          neighbourhood: neighbourhood.trim(),
+          onboarding_completed: true,
+        })
+        .eq("id", userId);
+      if (error) throw error;
+      toast.success("Verification submitted");
+      navigate({ to: "/verify-address/submitted" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not submit");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background flex justify-center">
-      <div className="w-full max-w-md px-5 pt-6 pb-8 flex flex-col">
-        {/* Header */}
+      <form onSubmit={handleSubmit} className="w-full max-w-md px-5 pt-6 pb-8 flex flex-col">
         <div className="flex items-center gap-3 mb-6">
           <Link
-            to="/"
+            to="/profile-setup"
             aria-label="Go back"
             className="h-10 w-10 -ml-2 flex items-center justify-center rounded-full hover:bg-secondary active:scale-95 transition"
           >
@@ -87,8 +145,15 @@ export function AddressVerification() {
           </h1>
         </div>
 
-        {/* Form fields */}
         <div className="space-y-4">
+          <Field
+            label="Neighbourhood"
+            icon={MapPin}
+            placeholder="e.g. Greenview Heights area"
+            value={neighbourhood}
+            onChange={setNeighbourhood}
+            required
+          />
           <Field
             label="Building name"
             optional
@@ -111,15 +176,15 @@ export function AddressVerification() {
             placeholder="Start typing your street address"
             value={address}
             onChange={setAddress}
+            required
           />
         </div>
 
-        {/* Verification info card */}
         <section className="mt-6 rounded-3xl bg-card border border-border p-4 divide-y divide-border">
           <InfoRow
             icon={ShieldCheck}
             title="Verify Your Address"
-            desc="We'll verify your address with your local municipality to help build trust in the neighbourhood."
+            desc="We'll verify your address to help build trust in the neighbourhood."
           />
           <InfoRow
             icon={Clock}
@@ -138,28 +203,27 @@ export function AddressVerification() {
           />
         </section>
 
-        {/* Helper note */}
         <div className="mt-4 flex items-center gap-2 rounded-2xl bg-secondary/60 px-3.5 py-2.5">
           <Info className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={2} />
           <p className="text-[12.5px] text-muted-foreground">
-            All fields are optional but help speed up verification.
+            Building and room are optional but help speed up verification.
           </p>
         </div>
 
-        {/* Submit */}
-        <Link
-          to="/verify-address/submitted"
-          className="mt-5 w-full h-13 py-3.5 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition shadow-sm"
+        <button
+          type="submit"
+          disabled={saving}
+          className="mt-5 w-full h-13 py-3.5 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition shadow-sm disabled:opacity-60"
         >
-          <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.2} />
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.2} />}
           Apply for Verification
-        </Link>
+        </button>
 
         <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="h-3 w-3" strokeWidth={2.2} />
           Secure &amp; private
         </p>
-      </div>
+      </form>
     </main>
   );
 }

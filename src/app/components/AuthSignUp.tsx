@@ -4,6 +4,7 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { getRedirectForUser } from "@/lib/profileRouting";
 
 type Mode = "signup" | "login";
 
@@ -32,21 +33,22 @@ export function AuthSignUp() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/home` },
+          options: { emailRedirectTo: `${window.location.origin}/location` },
         });
         if (error) throw error;
-        if (data.session) {
-          toast.success("Account created. Welcome!");
-          navigate({ to: "/home" });
+        if (data.session && data.user) {
+          toast.success("Account created. Let's set up your profile.");
+          navigate({ to: "/location" });
         } else {
           toast.success("Check your email to confirm your account.");
           setMode("login");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in");
-        navigate({ to: "/home" });
+        const dest = data.user ? await getRedirectForUser(data.user.id) : "/home";
+        navigate({ to: dest });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
@@ -68,7 +70,9 @@ export function AuthSignUp() {
         return;
       }
       if (result.redirected) return;
-      navigate({ to: "/home" });
+      const { data: userData } = await supabase.auth.getUser();
+      const dest = userData.user ? await getRedirectForUser(userData.user.id) : "/location";
+      navigate({ to: dest });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
