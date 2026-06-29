@@ -203,6 +203,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_conversation_partners: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          conversation_id: string
+          display_name: string
+          full_name: string
+          user_id: string
+        }[]
+      }
+      get_or_create_direct_conversation: {
+        Args: { _other: string }
+        Returns: string
+      }
       is_conversation_participant: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
