@@ -254,15 +254,54 @@ export function PostCard({
           </div>
           <p className="text-xs text-muted-foreground">{post.timeAgo}</p>
         </div>
-        <button
-          type="button"
-          onClick={stop}
-          className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
-          aria-label="Post options"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+        {canManage ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                onClick={stop}
+                className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
+                aria-label="Post options"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={stop}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  onEdit?.(post.id);
+                }}
+              >
+                <Pencil className="mr-2 h-4 w-4" /> Edit post
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  onDelete?.(post.id);
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <button
+            type="button"
+            onClick={stop}
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
+            aria-label="Post options"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        )}
       </header>
+
 
       {post.title && (
         <h3 className="mt-3 text-base font-semibold leading-snug">
