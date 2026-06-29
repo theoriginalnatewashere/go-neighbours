@@ -238,6 +238,20 @@ export function AddressVerification() {
           />
         </section>
 
+        {status === "pending" && (
+          <div className="mt-4 flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-3.5 py-2.5">
+            <Clock className="h-4 w-4 shrink-0" strokeWidth={2} />
+            <p className="text-[12.5px] font-medium">
+              Your verification request is under review.
+            </p>
+          </div>
+        )}
+        {status === "approved" && (
+          <div className="mt-4 flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-3.5 py-2.5">
+            <ShieldCheck className="h-4 w-4 shrink-0" strokeWidth={2} />
+            <p className="text-[12.5px] font-medium">You're verified.</p>
+          </div>
+        )}
         <div className="mt-4 flex items-center gap-2 rounded-2xl bg-secondary/60 px-3.5 py-2.5">
           <Info className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={2} />
           <p className="text-[12.5px] text-muted-foreground">
@@ -247,12 +261,17 @@ export function AddressVerification() {
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || status === "pending" || status === "approved"}
           className="mt-5 w-full h-13 py-3.5 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition shadow-sm disabled:opacity-60"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.2} />}
-          Apply for Verification
+          {status === "pending"
+            ? "Verification pending"
+            : status === "approved"
+              ? "Already verified"
+              : "Apply for verification"}
         </button>
+
 
         <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="h-3 w-3" strokeWidth={2.2} />
