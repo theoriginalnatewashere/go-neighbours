@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   BottomNav,
   CategoryFilter,
@@ -18,9 +20,42 @@ const categories: Category[] = [
   { id: "share", label: "Share" },
 ];
 
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function firstName(full: string | null | undefined, display: string | null | undefined): string {
+  const base = (display ?? full ?? "").trim();
+  if (!base) return "neighbour";
+  return base.split(/\s+/)[0];
+}
 
 export default function EnhancedHome() {
   const [activeCategory, setActiveCategory] = useState("all");
+
+  const { data: profile } = useQuery({
+    queryKey: ["home-profile"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, display_name, neighbourhood, building, verification_status")
+        .eq("id", u.user.id)
+        .maybeSingle();
+      return data;
+    },
+    staleTime: 0,
+  });
+
+  const name = firstName(profile?.full_name, profile?.display_name);
+  const locationParts = [profile?.building, profile?.neighbourhood].filter(Boolean) as string[];
+  const locationLabel = locationParts.length > 0 ? locationParts.join(" · ") : "Set your location";
+  const isVerified = profile?.verification_status === "approved";
+
 
   return (
     <div className="relative mx-auto flex min-h-screen w-[393px] max-w-full flex-col bg-background">
