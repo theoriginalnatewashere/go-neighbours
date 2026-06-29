@@ -70,39 +70,7 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          display_name: string | null
-          full_name: string | null
-          id: string | null
-          interests: string[] | null
-          skills: string[] | null
-          tenure: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          display_name?: string | null
-          full_name?: string | null
-          id?: string | null
-          interests?: string[] | null
-          skills?: string[] | null
-          tenure?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          display_name?: string | null
-          full_name?: string | null
-          id?: string | null
-          interests?: string[] | null
-          skills?: string[] | null
-          tenure?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
