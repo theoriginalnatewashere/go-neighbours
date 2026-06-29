@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
 import {
   BottomNav,
   CategoryFilter,
+  PostCard,
   SafetyCard,
   TrustBadge,
   type Category,
 } from "./patterns";
+
 
 const categories: Category[] = [
   { id: "all", label: "All" },
@@ -51,10 +54,30 @@ export default function EnhancedHome() {
     staleTime: 0,
   });
 
+  const { data: posts = [] } = useQuery<FeedPost[]>({
+    queryKey: ["cluster-posts"],
+    queryFn: listClusterPosts,
+    staleTime: 0,
+  });
+
   const name = firstName(profile?.full_name, profile?.display_name);
   const locationParts = [profile?.building, profile?.neighbourhood].filter(Boolean) as string[];
   const locationLabel = locationParts.length > 0 ? locationParts.join(" · ") : "Set your location";
   const isVerified = profile?.verification_status === "approved";
+
+  const filteredPosts = useMemo(() => {
+    if (activeCategory === "all") return posts;
+    const map: Record<string, string[]> = {
+      help: ["Help", "Borrow", "Ride", "Errand"],
+      offer: ["Offer", "Offers"],
+      events: ["Event", "Events"],
+      lost: ["Lost", "Lost & found"],
+      share: ["Share", "Other"],
+    };
+    const allowed = map[activeCategory] ?? [];
+    return posts.filter((p) => allowed.includes(p.category));
+  }, [posts, activeCategory]);
+
 
 
   return (
@@ -117,29 +140,52 @@ export default function EnhancedHome() {
           details over chat.
         </SafetyCard>
 
-        {/* Empty state */}
-        <div className="flex flex-1 items-center justify-center py-10">
-          <div className="flex w-full max-w-sm flex-col items-center rounded-3xl border border-dashed border-border bg-card/60 px-6 py-10 text-center shadow-sm">
-            <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <MessageSquarePlus className="h-7 w-7" />
-            </span>
-            <h2 className="text-base font-semibold text-foreground">
-              Nothing here yet
-            </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-              Be the first to share an update, ask a question, or connect with
-              your neighbours.
-            </p>
-            <Link
-              to="/create-request"
-              className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <Plus className="h-4 w-4" />
-              Create a post
-            </Link>
+        {filteredPosts.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center py-10">
+            <div className="flex w-full max-w-sm flex-col items-center rounded-3xl border border-dashed border-border bg-card/60 px-6 py-10 text-center shadow-sm">
+              <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <MessageSquarePlus className="h-7 w-7" />
+              </span>
+              <h2 className="text-base font-semibold text-foreground">
+                Nothing here yet
+              </h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                Be the first to share an update, ask a question, or connect with
+                your neighbours.
+              </p>
+              <Link
+                to="/create-request"
+                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4" />
+                Create a post
+              </Link>
+            </div>
           </div>
-        </div>
+        ) : (
+          filteredPosts.map((p) => (
+            <PostCard
+              key={p.id}
+              post={{
+                id: p.id,
+                author: {
+                  name: p.author_name || "Neighbour",
+                  avatar: p.author_avatar_url ?? undefined,
+                  verified: p.author_verified,
+                },
+                category: p.category,
+                timeAgo: timeAgo(p.created_at),
+                title: p.title,
+                body: p.body,
+                likes: 0,
+                comments: 0,
+              }}
+            />
+          ))
+
+        )}
       </main>
+
 
 
       <Link
