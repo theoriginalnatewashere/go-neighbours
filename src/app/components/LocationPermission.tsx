@@ -105,12 +105,14 @@ export function LocationPermission() {
           Allow Location Access
         </Link>
 
-        <Link
-          to="/location/scanning"
+        <button
+          type="button"
+          onClick={handleSkip}
           className="mt-3 w-full h-12 rounded-2xl text-foreground font-medium text-[15px] flex items-center justify-center hover:bg-secondary transition"
         >
           Not now
-        </Link>
+        </button>
+
       </div>
     </main>
   );
