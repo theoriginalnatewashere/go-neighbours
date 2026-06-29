@@ -7,13 +7,22 @@ import {
   type LucideIcon,
   MessageCircle,
   MoreHorizontal,
+  Pencil,
   Plus,
   Search,
   Shield,
+  Trash2,
   User,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 
 /* ---------------- NeighborAvatar ---------------- */
 type AvatarSize = "sm" | "md" | "lg";
