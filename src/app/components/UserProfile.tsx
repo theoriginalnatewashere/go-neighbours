@@ -18,7 +18,9 @@ interface ProfileData {
   interests: string[] | null;
   tenure: string | null;
   onboarding_completed: boolean | null;
+  verification_status: "unverified" | "pending" | "approved" | "rejected" | null;
 }
+
 
 const rows = [
   { id: "edit", label: "Edit profile", icon: Settings, to: "/profile-setup" as const },
