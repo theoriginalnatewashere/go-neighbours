@@ -95,7 +95,10 @@ export type Database = {
       }
       posts: {
         Row: {
+          author_avatar_url: string | null
           author_id: string
+          author_name: string | null
+          author_verified: boolean
           body: string
           building: string | null
           category: string
@@ -107,7 +110,10 @@ export type Database = {
           urgency: string
         }
         Insert: {
+          author_avatar_url?: string | null
           author_id: string
+          author_name?: string | null
+          author_verified?: boolean
           body?: string
           building?: string | null
           category?: string
@@ -119,7 +125,10 @@ export type Database = {
           urgency?: string
         }
         Update: {
+          author_avatar_url?: string | null
           author_id?: string
+          author_name?: string | null
+          author_verified?: boolean
           body?: string
           building?: string | null
           category?: string
