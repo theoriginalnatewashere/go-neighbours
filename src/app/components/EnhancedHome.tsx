@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
 import {
   BottomNav,
   CategoryFilter,
+  PostCard,
   SafetyCard,
   TrustBadge,
   type Category,
 } from "./patterns";
+
 
 const categories: Category[] = [
   { id: "all", label: "All" },
