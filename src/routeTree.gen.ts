@@ -14,7 +14,6 @@ import { Route as SuccessRouteImport } from './routes/success'
 import { Route as ProfileSetupRouteImport } from './routes/profile-setup'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PatternsRouteImport } from './routes/patterns'
-import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LocationRouteImport } from './routes/location'
 import { Route as CreateRequestRouteImport } from './routes/create-request'
 import { Route as CreateOfferRouteImport } from './routes/create-offer'
@@ -27,8 +26,9 @@ import { Route as RequestIdRouteImport } from './routes/request.$id'
 import { Route as NeighborIdRouteImport } from './routes/neighbor.$id'
 import { Route as LocationScanningRouteImport } from './routes/location.scanning'
 import { Route as LocationClusterRouteImport } from './routes/location.cluster'
-import { Route as ChatIdRouteImport } from './routes/chat.$id'
+import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 
 const VerifyAddressRoute = VerifyAddressRouteImport.update({
   id: '/verify-address',
@@ -53,11 +53,6 @@ const ProfileRoute = ProfileRouteImport.update({
 const PatternsRoute = PatternsRouteImport.update({
   id: '/patterns',
   path: '/patterns',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MessagesRoute = MessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocationRoute = LocationRouteImport.update({
@@ -119,14 +114,19 @@ const LocationClusterRoute = LocationClusterRouteImport.update({
   path: '/cluster',
   getParentRoute: () => LocationRoute,
 } as any)
-const ChatIdRoute = ChatIdRouteImport.update({
-  id: '/chat/$id',
-  path: '/chat/$id',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
+  id: '/chat/$id',
+  path: '/chat/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
@@ -137,19 +137,19 @@ export interface FileRoutesByFullPath {
   '/create-offer': typeof CreateOfferRoute
   '/create-request': typeof CreateRequestRoute
   '/location': typeof LocationRouteWithChildren
-  '/messages': typeof MessagesRoute
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
   '/home': typeof AuthenticatedHomeRoute
-  '/chat/$id': typeof ChatIdRoute
+  '/messages': typeof AuthenticatedMessagesRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/request/$id': typeof RequestIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/chat/$id': typeof AuthenticatedChatIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -158,19 +158,19 @@ export interface FileRoutesByTo {
   '/create-offer': typeof CreateOfferRoute
   '/create-request': typeof CreateRequestRoute
   '/location': typeof LocationRouteWithChildren
-  '/messages': typeof MessagesRoute
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
   '/home': typeof AuthenticatedHomeRoute
-  '/chat/$id': typeof ChatIdRoute
+  '/messages': typeof AuthenticatedMessagesRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/request/$id': typeof RequestIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/chat/$id': typeof AuthenticatedChatIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -181,19 +181,19 @@ export interface FileRoutesById {
   '/create-offer': typeof CreateOfferRoute
   '/create-request': typeof CreateRequestRoute
   '/location': typeof LocationRouteWithChildren
-  '/messages': typeof MessagesRoute
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
   '/_authenticated/home': typeof AuthenticatedHomeRoute
-  '/chat/$id': typeof ChatIdRoute
+  '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/request/$id': typeof RequestIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -204,19 +204,19 @@ export interface FileRouteTypes {
     | '/create-offer'
     | '/create-request'
     | '/location'
-    | '/messages'
     | '/patterns'
     | '/profile'
     | '/profile-setup'
     | '/success'
     | '/verify-address'
     | '/home'
-    | '/chat/$id'
+    | '/messages'
     | '/location/cluster'
     | '/location/scanning'
     | '/neighbor/$id'
     | '/request/$id'
     | '/verify-address/submitted'
+    | '/chat/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -225,19 +225,19 @@ export interface FileRouteTypes {
     | '/create-offer'
     | '/create-request'
     | '/location'
-    | '/messages'
     | '/patterns'
     | '/profile'
     | '/profile-setup'
     | '/success'
     | '/verify-address'
     | '/home'
-    | '/chat/$id'
+    | '/messages'
     | '/location/cluster'
     | '/location/scanning'
     | '/neighbor/$id'
     | '/request/$id'
     | '/verify-address/submitted'
+    | '/chat/$id'
   id:
     | '__root__'
     | '/'
@@ -247,19 +247,19 @@ export interface FileRouteTypes {
     | '/create-offer'
     | '/create-request'
     | '/location'
-    | '/messages'
     | '/patterns'
     | '/profile'
     | '/profile-setup'
     | '/success'
     | '/verify-address'
     | '/_authenticated/home'
-    | '/chat/$id'
+    | '/_authenticated/messages'
     | '/location/cluster'
     | '/location/scanning'
     | '/neighbor/$id'
     | '/request/$id'
     | '/verify-address/submitted'
+    | '/_authenticated/chat/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -270,13 +270,11 @@ export interface RootRouteChildren {
   CreateOfferRoute: typeof CreateOfferRoute
   CreateRequestRoute: typeof CreateRequestRoute
   LocationRoute: typeof LocationRouteWithChildren
-  MessagesRoute: typeof MessagesRoute
   PatternsRoute: typeof PatternsRoute
   ProfileRoute: typeof ProfileRoute
   ProfileSetupRoute: typeof ProfileSetupRoute
   SuccessRoute: typeof SuccessRoute
   VerifyAddressRoute: typeof VerifyAddressRouteWithChildren
-  ChatIdRoute: typeof ChatIdRoute
   NeighborIdRoute: typeof NeighborIdRoute
   RequestIdRoute: typeof RequestIdRoute
 }
@@ -316,13 +314,6 @@ declare module '@tanstack/react-router' {
       path: '/patterns'
       fullPath: '/patterns'
       preLoaderRoute: typeof PatternsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/messages': {
-      id: '/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/location': {
@@ -409,12 +400,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocationClusterRouteImport
       parentRoute: typeof LocationRoute
     }
-    '/chat/$id': {
-      id: '/chat/$id'
-      path: '/chat/$id'
-      fullPath: '/chat/$id'
-      preLoaderRoute: typeof ChatIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/messages': {
+      id: '/_authenticated/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
       id: '/_authenticated/home'
@@ -423,15 +414,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chat/$id': {
+      id: '/_authenticated/chat/$id'
+      path: '/chat/$id'
+      fullPath: '/chat/$id'
+      preLoaderRoute: typeof AuthenticatedChatIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
+  AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
+  AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -471,13 +473,11 @@ const rootRouteChildren: RootRouteChildren = {
   CreateOfferRoute: CreateOfferRoute,
   CreateRequestRoute: CreateRequestRoute,
   LocationRoute: LocationRouteWithChildren,
-  MessagesRoute: MessagesRoute,
   PatternsRoute: PatternsRoute,
   ProfileRoute: ProfileRoute,
   ProfileSetupRoute: ProfileSetupRoute,
   SuccessRoute: SuccessRoute,
   VerifyAddressRoute: VerifyAddressRouteWithChildren,
-  ChatIdRoute: ChatIdRoute,
   NeighborIdRoute: NeighborIdRoute,
   RequestIdRoute: RequestIdRoute,
 }
