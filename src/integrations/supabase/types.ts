@@ -93,6 +93,45 @@ export type Database = {
           },
         ]
       }
+      posts: {
+        Row: {
+          author_id: string
+          body: string
+          building: string | null
+          category: string
+          cluster: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          urgency: string
+        }
+        Insert: {
+          author_id: string
+          body?: string
+          building?: string | null
+          category?: string
+          cluster: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          urgency?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          building?: string | null
+          category?: string
+          cluster?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          urgency?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -203,6 +242,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_neighbourhood: { Args: never; Returns: string }
       get_conversation_partners: {
         Args: never
         Returns: {
