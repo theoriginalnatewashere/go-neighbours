@@ -73,6 +73,47 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
   return data as PostRow;
 }
 
+export async function getPost(id: string): Promise<PostRow | null> {
+  const { data, error } = await supabase
+    .from("posts")
+    .select(
+      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as PostRow | null) ?? null;
+}
+
+export type UpdatePostInput = {
+  id: string;
+  title: string;
+  body: string;
+  category: string;
+  urgency: "low" | "medium" | "high";
+};
+
+export async function updatePost(input: UpdatePostInput): Promise<PostRow> {
+  const { data, error } = await supabase
+    .from("posts")
+    .update({
+      title: input.title.trim(),
+      body: input.body.trim(),
+      category: input.category,
+      urgency: input.urgency,
+    })
+    .eq("id", input.id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as PostRow;
+}
+
+export async function deletePost(id: string): Promise<void> {
+  const { error } = await supabase.from("posts").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);

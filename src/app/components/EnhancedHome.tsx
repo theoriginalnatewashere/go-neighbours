@@ -1,9 +1,20 @@
 import { useState, useMemo } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Bell, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
+import { deletePost, listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   BottomNav,
   CategoryFilter,
@@ -12,7 +23,6 @@ import {
   TrustBadge,
   type Category,
 } from "./patterns";
-
 
 const categories: Category[] = [
   { id: "all", label: "All" },
@@ -37,11 +47,22 @@ function firstName(full: string | null | undefined, display: string | null | und
 }
 
 export default function EnhancedHome() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const [activeCategory, setActiveCategory] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const toggleExpanded = (id: string) =>
     setExpandedId((cur) => (cur === id ? null : id));
 
+  const { data: currentUserId } = useQuery({
+    queryKey: ["current-user-id"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user?.id ?? null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data: profile } = useQuery({
     queryKey: ["home-profile"],
@@ -64,6 +85,27 @@ export default function EnhancedHome() {
     staleTime: 0,
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: deletePost,
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: ["cluster-posts"] });
+      const prev = qc.getQueryData<FeedPost[]>(["cluster-posts"]) ?? [];
+      qc.setQueryData<FeedPost[]>(["cluster-posts"], prev.filter((p) => p.id !== id));
+      return { prev };
+    },
+    onError: (e: Error, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["cluster-posts"], ctx.prev);
+      toast.error(e.message || "Could not delete post");
+    },
+    onSuccess: () => {
+      toast.success("Post deleted");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+      setPendingDeleteId(null);
+    },
+  });
+
   const name = firstName(profile?.full_name, profile?.display_name);
   const locationParts = [profile?.building, profile?.neighbourhood].filter(Boolean) as string[];
   const locationLabel = locationParts.length > 0 ? locationParts.join(" · ") : "Set your location";
@@ -82,7 +124,9 @@ export default function EnhancedHome() {
     return posts.filter((p) => allowed.includes(p.category));
   }, [posts, activeCategory]);
 
-
+  const handleEdit = (id: string) => {
+    navigate({ to: "/create-request", search: { edit: id } });
+  };
 
   return (
     <div className="relative mx-auto flex min-h-screen w-[393px] max-w-full flex-col bg-background">
@@ -125,7 +169,6 @@ export default function EnhancedHome() {
             <TrustBadge level="new" label="Not verified" />
           )}
         </div>
-
       </header>
 
       {/* Filters */}
@@ -167,35 +210,37 @@ export default function EnhancedHome() {
             </div>
           </div>
         ) : (
-          filteredPosts.map((p) => (
-            <PostCard
-              key={p.id}
-              expandable
-              expanded={expandedId === p.id}
-              onToggle={toggleExpanded}
-              post={{
-                id: p.id,
-                author: {
-                  name: p.author_name || "Neighbour",
-                  avatar: p.author_avatar_url ?? undefined,
-                  verified: p.author_verified,
-                },
-                category: p.category,
-                timeAgo: timeAgo(p.created_at),
-                title: p.title,
-                body: p.body,
-                likes: 0,
-                comments: 0,
-                urgency: p.urgency,
-              }}
-            />
-          ))
-
-
+          filteredPosts.map((p) => {
+            const isAuthor = !!currentUserId && p.author_id === currentUserId;
+            return (
+              <PostCard
+                key={p.id}
+                expandable
+                expanded={expandedId === p.id}
+                onToggle={toggleExpanded}
+                canManage={isAuthor}
+                onEdit={handleEdit}
+                onDelete={(id) => setPendingDeleteId(id)}
+                post={{
+                  id: p.id,
+                  author: {
+                    name: p.author_name || "Neighbour",
+                    avatar: p.author_avatar_url ?? undefined,
+                    verified: p.author_verified,
+                  },
+                  category: p.category,
+                  timeAgo: timeAgo(p.created_at),
+                  title: p.title,
+                  body: p.body,
+                  likes: 0,
+                  comments: 0,
+                  urgency: p.urgency,
+                }}
+              />
+            );
+          })
         )}
       </main>
-
-
 
       <Link
         to="/create-request"
@@ -205,6 +250,37 @@ export default function EnhancedHome() {
         <Plus className="h-6 w-6" />
       </Link>
       <BottomNav activeId="home" />
+
+      <AlertDialog
+        open={!!pendingDeleteId}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setPendingDeleteId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove your post from your neighbourhood feed.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingDeleteId) deleteMutation.mutate(pendingDeleteId);
+              }}
+            >
+              {deleteMutation.isPending ? "Deleting…" : "Delete post"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

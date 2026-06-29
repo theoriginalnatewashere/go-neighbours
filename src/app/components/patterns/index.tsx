@@ -7,13 +7,22 @@ import {
   type LucideIcon,
   MessageCircle,
   MoreHorizontal,
+  Pencil,
   Plus,
   Search,
   Shield,
+  Trash2,
   User,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 
 /* ---------------- NeighborAvatar ---------------- */
 type AvatarSize = "sm" | "md" | "lg";
@@ -176,6 +185,9 @@ export function PostCard({
   expandable,
   expanded,
   onToggle,
+  canManage,
+  onEdit,
+  onDelete,
 }: {
   post: Post;
   onLike?: (id: string) => void;
@@ -183,7 +195,11 @@ export function PostCard({
   expandable?: boolean;
   expanded?: boolean;
   onToggle?: (id: string) => void;
+  canManage?: boolean;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) {
+
   const interactive = expandable && !!onToggle;
   const isOpen = !!expanded;
 
@@ -238,15 +254,54 @@ export function PostCard({
           </div>
           <p className="text-xs text-muted-foreground">{post.timeAgo}</p>
         </div>
-        <button
-          type="button"
-          onClick={stop}
-          className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
-          aria-label="Post options"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+        {canManage ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                onClick={stop}
+                className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
+                aria-label="Post options"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={stop}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  onEdit?.(post.id);
+                }}
+              >
+                <Pencil className="mr-2 h-4 w-4" /> Edit post
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  onDelete?.(post.id);
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <button
+            type="button"
+            onClick={stop}
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
+            aria-label="Post options"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        )}
       </header>
+
 
       {post.title && (
         <h3 className="mt-3 text-base font-semibold leading-snug">
