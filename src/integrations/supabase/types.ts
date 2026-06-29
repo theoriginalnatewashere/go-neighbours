@@ -31,6 +31,8 @@ export type Database = {
           skills: string[]
           tenure: string | null
           updated_at: string
+          verification_status: Database["public"]["Enums"]["verification_status"]
+          verification_submitted_at: string | null
         }
         Insert: {
           address?: string | null
@@ -48,6 +50,8 @@ export type Database = {
           skills?: string[]
           tenure?: string | null
           updated_at?: string
+          verification_status?: Database["public"]["Enums"]["verification_status"]
+          verification_submitted_at?: string | null
         }
         Update: {
           address?: string | null
@@ -65,6 +69,53 @@ export type Database = {
           skills?: string[]
           tenure?: string | null
           updated_at?: string
+          verification_status?: Database["public"]["Enums"]["verification_status"]
+          verification_submitted_at?: string | null
+        }
+        Relationships: []
+      }
+      verification_requests: {
+        Row: {
+          address: string
+          building: string | null
+          created_at: string
+          id: string
+          neighbourhood: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          room: string | null
+          status: Database["public"]["Enums"]["verification_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          building?: string | null
+          created_at?: string
+          id?: string
+          neighbourhood: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          room?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          building?: string | null
+          created_at?: string
+          id?: string
+          neighbourhood?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          room?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -76,7 +127,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      verification_status: "unverified" | "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -203,6 +254,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      verification_status: ["unverified", "pending", "approved", "rejected"],
+    },
   },
 } as const

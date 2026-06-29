@@ -18,7 +18,9 @@ interface ProfileData {
   interests: string[] | null;
   tenure: string | null;
   onboarding_completed: boolean | null;
+  verification_status: "unverified" | "pending" | "approved" | "rejected" | null;
 }
+
 
 const rows = [
   { id: "edit", label: "Edit profile", icon: Settings, to: "/profile-setup" as const },
@@ -38,9 +40,10 @@ export default function UserProfile() {
       if (!u.user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, display_name, avatar_url, bio, neighbourhood, building, skills, interests, tenure, onboarding_completed")
+        .select("full_name, display_name, avatar_url, bio, neighbourhood, building, skills, interests, tenure, onboarding_completed, verification_status")
         .eq("id", u.user.id)
         .maybeSingle();
+
       setProfile(data as ProfileData | null);
       setLoading(false);
     })();
@@ -77,18 +80,27 @@ export default function UserProfile() {
 
       <main className="flex-1 space-y-4 px-4 pb-28">
         <section className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <NeighborAvatar name={name} src={profile?.avatar_url ?? undefined} size="lg" verified={!!profile?.onboarding_completed} />
+          <NeighborAvatar name={name} src={profile?.avatar_url ?? undefined} size="lg" verified={profile?.verification_status === "approved"} />
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-base font-semibold">{name}</h2>
             <p className="truncate text-xs text-muted-foreground">{location}</p>
             <div className="mt-1.5 flex items-center gap-2">
-              <TrustBadge level={profile?.onboarding_completed ? "verified" : "new"} />
+              {profile?.verification_status === "approved" ? (
+                <TrustBadge level="verified" />
+              ) : profile?.verification_status === "pending" ? (
+                <TrustBadge level="new" label="Verification pending" />
+              ) : profile?.verification_status === "rejected" ? (
+                <TrustBadge level="new" label="Verification rejected" />
+              ) : (
+                <TrustBadge level="new" label="Not verified" />
+              )}
               {profile?.tenure && (
                 <span className="text-[11px] text-muted-foreground">{profile.tenure}</span>
               )}
             </div>
           </div>
         </section>
+
 
         {profile?.bio && (
           <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
