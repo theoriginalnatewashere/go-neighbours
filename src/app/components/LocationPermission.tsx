@@ -38,10 +38,22 @@ function InfoRow({
 }
 
 export function LocationPermission() {
+  const navigate = useNavigate();
+
+  function handleSkip() {
+    try {
+      sessionStorage.setItem(LOCATION_SKIPPED_KEY, "1");
+    } catch {
+      // sessionStorage may be unavailable (private mode); skip silently
+    }
+    navigate({ to: "/profile-setup", replace: true });
+  }
+
   return (
     <main className="min-h-screen bg-background flex justify-center">
       <div className="w-full max-w-md px-5 pt-6 pb-8 flex flex-col">
         <div className="flex items-center gap-3 mb-4">
+
           <Link
             to="/auth"
             aria-label="Go back"
