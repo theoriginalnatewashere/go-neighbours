@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   MapPin,
@@ -7,6 +7,9 @@ import {
   Lock,
   type LucideIcon,
 } from "lucide-react";
+
+export const LOCATION_SKIPPED_KEY = "goneighbours.locationSkipped";
+
 
 function InfoRow({
   icon: Icon,
