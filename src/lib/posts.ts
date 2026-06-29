@@ -10,50 +10,25 @@ export type PostRow = {
   title: string;
   body: string;
   created_at: string;
+  author_name: string | null;
+  author_avatar_url: string | null;
+  author_verified: boolean;
 };
 
-export type FeedPost = PostRow & {
-  author: {
-    display_name: string | null;
-    full_name: string | null;
-    avatar_url: string | null;
-    verification_status: string | null;
-  } | null;
-};
+export type FeedPost = PostRow;
 
 export async function listClusterPosts(): Promise<FeedPost[]> {
-  // RLS already restricts to the caller's cluster.
+  // RLS restricts results to posts in the caller's cluster.
   const { data, error } = await supabase
     .from("posts")
-    .select("id, author_id, cluster, building, category, urgency, title, body, created_at")
+    .select(
+      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified",
+    )
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) throw error;
-  const rows = (data ?? []) as PostRow[];
-  if (rows.length === 0) return [];
-
-  const ids = Array.from(new Set(rows.map((r) => r.author_id)));
-  const { data: profs } = await supabase
-    .from("profiles")
-    .select("id, display_name, full_name, avatar_url, verification_status")
-    .in("id", ids);
-  const byId = new Map((profs ?? []).map((p) => [p.id, p]));
-  return rows.map((r) => {
-    const p = byId.get(r.author_id);
-    return {
-      ...r,
-      author: p
-        ? {
-            display_name: p.display_name,
-            full_name: p.full_name,
-            avatar_url: p.avatar_url,
-            verification_status: p.verification_status,
-          }
-        : null,
-    };
-  });
+  return (data ?? []) as PostRow[];
 }
-
 
 export type NewPostInput = {
   title: string;
@@ -68,7 +43,7 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
 
   const { data: profile, error: pErr } = await supabase
     .from("profiles")
-    .select("neighbourhood, building")
+    .select("neighbourhood, building, display_name, full_name, avatar_url, verification_status")
     .eq("id", u.user.id)
     .maybeSingle();
   if (pErr) throw pErr;
@@ -88,6 +63,9 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
       body: input.body.trim(),
       category: input.category,
       urgency: input.urgency,
+      author_name: profile.display_name || profile.full_name || "Neighbour",
+      author_avatar_url: profile.avatar_url,
+      author_verified: profile.verification_status === "approved",
     })
     .select()
     .single();
