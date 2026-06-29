@@ -4,8 +4,8 @@ import { guardSignedIn } from "@/lib/authGuard";
 
 export const Route = createFileRoute("/location")({
   ssr: false,
-  beforeLoad: async (ctx) => {
-    await guardSignedIn(ctx);
+  beforeLoad: async () => {
+    await guardSignedIn();
     if (typeof window !== "undefined" && sessionStorage.getItem(LOCATION_SKIPPED_KEY) === "1") {
       throw redirect({ to: "/profile-setup" });
     }
