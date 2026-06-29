@@ -160,19 +160,67 @@ export type Post = {
   body: string;
   likes: number;
   comments: number;
+  urgency?: "low" | "medium" | "high";
+};
+
+const urgencyTone: Record<NonNullable<Post["urgency"]>, string> = {
+  high: "bg-destructive/10 text-destructive",
+  medium: "bg-accent/50 text-accent-foreground",
+  low: "bg-secondary text-secondary-foreground",
 };
 
 export function PostCard({
   post,
   onLike,
   onComment,
+  expandable,
+  expanded,
+  onToggle,
 }: {
   post: Post;
   onLike?: (id: string) => void;
   onComment?: (id: string) => void;
+  expandable?: boolean;
+  expanded?: boolean;
+  onToggle?: (id: string) => void;
 }) {
+  const interactive = expandable && !!onToggle;
+  const isOpen = !!expanded;
+
+  const handleToggle = () => onToggle?.(post.id);
+  const handleKey = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (!interactive) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleToggle();
+    }
+  };
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+
   return (
-    <article className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+    <article
+      className={cn(
+        "relative rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors",
+        interactive &&
+          "cursor-pointer hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+      )}
+      onClick={interactive ? handleToggle : undefined}
+      onKeyDown={interactive ? handleKey : undefined}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-expanded={interactive ? isOpen : undefined}
+    >
+      {post.urgency && (
+        <span
+          className={cn(
+            "absolute top-3 right-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+            urgencyTone[post.urgency],
+          )}
+        >
+          {post.urgency}
+        </span>
+      )}
+
       <header className="flex items-center gap-3">
         <NeighborAvatar
           name={post.author.name}
@@ -192,6 +240,7 @@ export function PostCard({
         </div>
         <button
           type="button"
+          onClick={stop}
           className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
           aria-label="Post options"
         >
@@ -204,14 +253,36 @@ export function PostCard({
           {post.title}
         </h3>
       )}
-      <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
+      <p
+        className={cn(
+          "mt-1.5 whitespace-pre-line text-sm leading-relaxed text-foreground/90",
+          interactive && !isOpen && "line-clamp-2",
+        )}
+      >
         {post.body}
       </p>
+
+      {interactive && (
+        <button
+          type="button"
+          onClick={(e) => {
+            stop(e);
+            handleToggle();
+          }}
+          className="mt-2 text-xs font-medium text-primary hover:underline"
+          aria-label={isOpen ? "Collapse post" : "Expand post"}
+        >
+          {isOpen ? "Show less" : "Read more"}
+        </button>
+      )}
 
       <footer className="mt-4 flex items-center gap-5 text-sm text-muted-foreground">
         <button
           type="button"
-          onClick={() => onLike?.(post.id)}
+          onClick={(e) => {
+            stop(e);
+            onLike?.(post.id);
+          }}
           className="inline-flex items-center gap-1.5 hover:text-primary"
         >
           <Heart className="h-4 w-4" />
@@ -219,7 +290,10 @@ export function PostCard({
         </button>
         <button
           type="button"
-          onClick={() => onComment?.(post.id)}
+          onClick={(e) => {
+            stop(e);
+            onComment?.(post.id);
+          }}
           className="inline-flex items-center gap-1.5 hover:text-primary"
         >
           <MessageCircle className="h-4 w-4" />
@@ -229,6 +303,7 @@ export function PostCard({
     </article>
   );
 }
+
 
 /* ---------------- BottomNav ---------------- */
 export type NavItem = {

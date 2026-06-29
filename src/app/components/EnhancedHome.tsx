@@ -38,6 +38,10 @@ function firstName(full: string | null | undefined, display: string | null | und
 
 export default function EnhancedHome() {
   const [activeCategory, setActiveCategory] = useState("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const toggleExpanded = (id: string) =>
+    setExpandedId((cur) => (cur === id ? null : id));
+
 
   const { data: profile } = useQuery({
     queryKey: ["home-profile"],
@@ -166,6 +170,9 @@ export default function EnhancedHome() {
           filteredPosts.map((p) => (
             <PostCard
               key={p.id}
+              expandable
+              expanded={expandedId === p.id}
+              onToggle={toggleExpanded}
               post={{
                 id: p.id,
                 author: {
@@ -179,9 +186,11 @@ export default function EnhancedHome() {
                 body: p.body,
                 likes: 0,
                 comments: 0,
+                urgency: p.urgency,
               }}
             />
           ))
+
 
         )}
       </main>
