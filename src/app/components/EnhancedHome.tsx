@@ -88,12 +88,17 @@ export default function EnhancedHome() {
 
         {/* Cluster pill */}
         <div className="mt-3 flex items-center justify-between rounded-full bg-accent/40 px-3 py-1.5">
-          <div className="inline-flex items-center gap-2 text-sm font-medium text-accent-foreground">
-            <MapPin className="h-4 w-4" />
-            Cluster D18 · Greenview Heights
+          <div className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-accent-foreground">
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span className="truncate">{locationLabel}</span>
           </div>
-          <TrustBadge level="verified" label="Verified" />
+          {isVerified ? (
+            <TrustBadge level="verified" label="Verified" />
+          ) : (
+            <TrustBadge level="new" label="Not verified" />
+          )}
         </div>
+
       </header>
 
       {/* Filters */}
