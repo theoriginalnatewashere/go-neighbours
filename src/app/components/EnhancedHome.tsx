@@ -169,12 +169,9 @@ export default function EnhancedHome() {
               post={{
                 id: p.id,
                 author: {
-                  name:
-                    p.author?.display_name ||
-                    p.author?.full_name ||
-                    "Neighbour",
-                  avatar: p.author?.avatar_url ?? undefined,
-                  verified: p.author?.verification_status === "approved",
+                  name: p.author_name || "Neighbour",
+                  avatar: p.author_avatar_url ?? undefined,
+                  verified: p.author_verified,
                 },
                 category: p.category,
                 timeAgo: timeAgo(p.created_at),
@@ -185,6 +182,7 @@ export default function EnhancedHome() {
               }}
             />
           ))
+
         )}
       </main>
 
