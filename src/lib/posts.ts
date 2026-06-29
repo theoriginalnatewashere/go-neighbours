@@ -25,14 +25,35 @@ export async function listClusterPosts(): Promise<FeedPost[]> {
   // RLS already restricts to the caller's cluster.
   const { data, error } = await supabase
     .from("posts")
-    .select(
-      "id, author_id, cluster, building, category, urgency, title, body, created_at, author:profiles!posts_author_id_fkey(display_name, full_name, avatar_url, verification_status)",
-    )
+    .select("id, author_id, cluster, building, category, urgency, title, body, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) throw error;
-  return (data ?? []) as unknown as FeedPost[];
+  const rows = (data ?? []) as PostRow[];
+  if (rows.length === 0) return [];
+
+  const ids = Array.from(new Set(rows.map((r) => r.author_id)));
+  const { data: profs } = await supabase
+    .from("profiles")
+    .select("id, display_name, full_name, avatar_url, verification_status")
+    .in("id", ids);
+  const byId = new Map((profs ?? []).map((p) => [p.id, p]));
+  return rows.map((r) => {
+    const p = byId.get(r.author_id);
+    return {
+      ...r,
+      author: p
+        ? {
+            display_name: p.display_name,
+            full_name: p.full_name,
+            avatar_url: p.avatar_url,
+            verification_status: p.verification_status,
+          }
+        : null,
+    };
+  });
 }
+
 
 export type NewPostInput = {
   title: string;
