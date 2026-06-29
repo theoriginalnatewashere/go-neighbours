@@ -54,10 +54,30 @@ export default function EnhancedHome() {
     staleTime: 0,
   });
 
+  const { data: posts = [] } = useQuery<FeedPost[]>({
+    queryKey: ["cluster-posts"],
+    queryFn: listClusterPosts,
+    staleTime: 0,
+  });
+
   const name = firstName(profile?.full_name, profile?.display_name);
   const locationParts = [profile?.building, profile?.neighbourhood].filter(Boolean) as string[];
   const locationLabel = locationParts.length > 0 ? locationParts.join(" · ") : "Set your location";
   const isVerified = profile?.verification_status === "approved";
+
+  const filteredPosts = useMemo(() => {
+    if (activeCategory === "all") return posts;
+    const map: Record<string, string[]> = {
+      help: ["Help", "Borrow", "Ride", "Errand"],
+      offer: ["Offer", "Offers"],
+      events: ["Event", "Events"],
+      lost: ["Lost", "Lost & found"],
+      share: ["Share", "Other"],
+    };
+    const allowed = map[activeCategory] ?? [];
+    return posts.filter((p) => allowed.includes(p.category));
+  }, [posts, activeCategory]);
+
 
 
   return (
