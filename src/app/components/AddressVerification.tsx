@@ -69,6 +69,7 @@ export function AddressVerification() {
   const [room, setRoom] = useState("");
   const [address, setAddress] = useState("");
   const [neighbourhood, setNeighbourhood] = useState("");
+  const [status, setStatus] = useState<"unverified" | "pending" | "approved" | "rejected">("unverified");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -79,7 +80,7 @@ export function AddressVerification() {
       setUserId(u.user.id);
       const { data: p } = await supabase
         .from("profiles")
-        .select("building, room, address, neighbourhood")
+        .select("building, room, address, neighbourhood, verification_status")
         .eq("id", u.user.id)
         .maybeSingle();
       if (p) {
@@ -87,6 +88,7 @@ export function AddressVerification() {
         setRoom(p.room ?? "");
         setAddress(p.address ?? "");
         setNeighbourhood(p.neighbourhood ?? "");
+        setStatus((p.verification_status as typeof status) ?? "unverified");
       }
       setLoading(false);
     })();
@@ -95,24 +97,56 @@ export function AddressVerification() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!userId || saving) return;
+    if (status === "pending") {
+      toast.info("Your verification is already under review.");
+      navigate({ to: "/verify-address/submitted" });
+      return;
+    }
+    if (status === "approved") {
+      toast.success("You're already verified.");
+      navigate({ to: "/home" });
+      return;
+    }
     if (!address.trim() || !neighbourhood.trim()) {
       toast.error("Neighbourhood and address are required.");
       return;
     }
     setSaving(true);
     try {
-      const { error } = await supabase
+      const payload = {
+        building: building.trim() || null,
+        room: room.trim() || null,
+        address: address.trim(),
+        neighbourhood: neighbourhood.trim(),
+      };
+
+      const { error: reqError } = await supabase.from("verification_requests").insert({
+        user_id: userId,
+        status: "pending",
+        ...payload,
+      });
+      if (reqError) {
+        // Unique partial index → duplicate pending
+        if (reqError.code === "23505") {
+          toast.info("You already have a verification request under review.");
+          navigate({ to: "/verify-address/submitted" });
+          return;
+        }
+        throw reqError;
+      }
+
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
-          building: building.trim() || null,
-          room: room.trim() || null,
-          address: address.trim(),
-          neighbourhood: neighbourhood.trim(),
+          ...payload,
+          verification_status: "pending",
+          verification_submitted_at: new Date().toISOString(),
           onboarding_completed: true,
         })
         .eq("id", userId);
-      if (error) throw error;
-      toast.success("Verification submitted");
+      if (profileError) throw profileError;
+
+      toast.success("Verification request submitted — we'll review it within 24 hours.");
       navigate({ to: "/verify-address/submitted" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not submit");
@@ -120,6 +154,7 @@ export function AddressVerification() {
       setSaving(false);
     }
   }
+
 
   if (loading) {
     return (
