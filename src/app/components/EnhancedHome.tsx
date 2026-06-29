@@ -38,6 +38,10 @@ function firstName(full: string | null | undefined, display: string | null | und
 
 export default function EnhancedHome() {
   const [activeCategory, setActiveCategory] = useState("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const toggleExpanded = (id: string) =>
+    setExpandedId((cur) => (cur === id ? null : id));
+
 
   const { data: profile } = useQuery({
     queryKey: ["home-profile"],
