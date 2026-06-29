@@ -63,9 +63,10 @@ export default function EnhancedHome() {
       <header className="sticky top-0 z-20 bg-background/85 px-4 pt-4 pb-3 backdrop-blur">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-muted-foreground">Good morning</p>
-            <h1 className="truncate text-lg font-semibold">Hi, Sam 👋</h1>
+            <p className="text-xs font-medium text-muted-foreground">{getGreeting()}</p>
+            <h1 className="truncate text-lg font-semibold">Hi, {name} 👋</h1>
           </div>
+
           <div className="flex items-center gap-2">
             <button
               type="button"
