@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { createPost } from "@/lib/posts";
+import { createPost, getPost, updatePost } from "@/lib/posts";
+import { Route } from "@/routes/_authenticated/create-request";
 import { MobileShell, PrimaryButton, LabeledField, ScreenHeader } from "./patterns/shell";
 
 const categories = ["Help", "Borrow", "Ride", "Errand", "Other"];
@@ -18,6 +18,9 @@ const urgencies = [
 export default function CreateRequest() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { edit: editId } = Route.useSearch();
+  const isEdit = !!editId;
+
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [cat, setCat] = useState("Help");
@@ -37,7 +40,22 @@ export default function CreateRequest() {
     },
   });
 
-  const mutation = useMutation({
+  const { data: existing, isLoading: loadingExisting } = useQuery({
+    queryKey: ["edit-post", editId],
+    queryFn: () => (editId ? getPost(editId) : Promise.resolve(null)),
+    enabled: isEdit,
+  });
+
+  useEffect(() => {
+    if (existing) {
+      setTitle(existing.title);
+      setBody(existing.body);
+      setCat(existing.category);
+      setUrgency(existing.urgency);
+    }
+  }, [existing]);
+
+  const createMutation = useMutation({
     mutationFn: createPost,
     onSuccess: () => {
       toast.success("Post shared with your neighbours");
@@ -47,16 +65,41 @@ export default function CreateRequest() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const canSubmit = title.trim().length > 0 && !mutation.isPending;
+  const updateMutation = useMutation({
+    mutationFn: updatePost,
+    onSuccess: () => {
+      toast.success("Post updated");
+      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+      qc.invalidateQueries({ queryKey: ["edit-post", editId] });
+      navigate({ to: "/home" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const pending = createMutation.isPending || updateMutation.isPending;
+  const canSubmit = title.trim().length > 0 && !pending && (!isEdit || !loadingExisting);
+
   const clusterLabel = profile?.neighbourhood
     ? `${profile.building ? profile.building + " · " : ""}${profile.neighbourhood}`
     : "Set your location to post";
 
+  const handleSubmit = () => {
+    if (isEdit && editId) {
+      updateMutation.mutate({ id: editId, title, body, category: cat, urgency });
+    } else {
+      createMutation.mutate({ title, body, category: cat, urgency });
+    }
+  };
+
   return (
     <MobileShell>
-      <ScreenHeader title="New request" backTo="/home" />
+      <ScreenHeader title={isEdit ? "Edit post" : "New request"} backTo="/home" />
 
       <main className="flex-1 space-y-5 px-4 pb-32">
+        {isEdit && loadingExisting ? (
+          <p className="text-sm text-muted-foreground">Loading post…</p>
+        ) : null}
+
         <LabeledField label="What do you need?">
           <input
             value={title}
@@ -140,13 +183,14 @@ export default function CreateRequest() {
       </main>
 
       <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-        <PrimaryButton
-          disabled={!canSubmit}
-          onClick={() =>
-            mutation.mutate({ title, body, category: cat, urgency })
-          }
-        >
-          {mutation.isPending ? "Posting…" : "Post request"}
+        <PrimaryButton disabled={!canSubmit} onClick={handleSubmit}>
+          {pending
+            ? isEdit
+              ? "Saving…"
+              : "Posting…"
+            : isEdit
+              ? "Save changes"
+              : "Post request"}
         </PrimaryButton>
       </div>
     </MobileShell>
