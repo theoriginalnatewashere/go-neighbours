@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   MapPin,
@@ -7,6 +7,9 @@ import {
   Lock,
   type LucideIcon,
 } from "lucide-react";
+
+export const LOCATION_SKIPPED_KEY = "goneighbours.locationSkipped";
+
 
 function InfoRow({
   icon: Icon,
@@ -35,10 +38,22 @@ function InfoRow({
 }
 
 export function LocationPermission() {
+  const navigate = useNavigate();
+
+  function handleSkip() {
+    try {
+      sessionStorage.setItem(LOCATION_SKIPPED_KEY, "1");
+    } catch {
+      // sessionStorage may be unavailable (private mode); skip silently
+    }
+    navigate({ to: "/profile-setup", replace: true });
+  }
+
   return (
     <main className="min-h-screen bg-background flex justify-center">
       <div className="w-full max-w-md px-5 pt-6 pb-8 flex flex-col">
         <div className="flex items-center gap-3 mb-4">
+
           <Link
             to="/auth"
             aria-label="Go back"
@@ -90,12 +105,14 @@ export function LocationPermission() {
           Allow Location Access
         </Link>
 
-        <Link
-          to="/location/scanning"
+        <button
+          type="button"
+          onClick={handleSkip}
           className="mt-3 w-full h-12 rounded-2xl text-foreground font-medium text-[15px] flex items-center justify-center hover:bg-secondary transition"
         >
           Not now
-        </Link>
+        </button>
+
       </div>
     </main>
   );

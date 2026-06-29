@@ -1,10 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { LocationPermission } from "@/app/components/LocationPermission";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { LocationPermission, LOCATION_SKIPPED_KEY } from "@/app/components/LocationPermission";
 import { guardSignedIn } from "@/lib/authGuard";
 
 export const Route = createFileRoute("/location")({
   ssr: false,
-  beforeLoad: guardSignedIn,
+  beforeLoad: async () => {
+    await guardSignedIn();
+    if (typeof window !== "undefined" && sessionStorage.getItem(LOCATION_SKIPPED_KEY) === "1") {
+      throw redirect({ to: "/profile-setup" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Allow location — Go Neighbours" },
@@ -13,3 +18,4 @@ export const Route = createFileRoute("/location")({
   }),
   component: LocationPermission,
 });
+
