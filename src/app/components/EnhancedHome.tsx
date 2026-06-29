@@ -170,6 +170,9 @@ export default function EnhancedHome() {
           filteredPosts.map((p) => (
             <PostCard
               key={p.id}
+              expandable
+              expanded={expandedId === p.id}
+              onToggle={toggleExpanded}
               post={{
                 id: p.id,
                 author: {
@@ -183,9 +186,11 @@ export default function EnhancedHome() {
                 body: p.body,
                 likes: 0,
                 comments: 0,
+                urgency: p.urgency,
               }}
             />
           ))
+
 
         )}
       </main>
