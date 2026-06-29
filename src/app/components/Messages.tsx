@@ -1,53 +1,47 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   BottomNav,
   MessageThreadItem,
   type MessageThread,
 } from "./patterns";
 import { MobileShell } from "./patterns/shell";
-
-const threads: MessageThread[] = [
-  {
-    id: "t1",
-    name: "Hana Okafor",
-    verified: true,
-    preview: "Thank you so much! I'm in flat 4B 🙏",
-    timeAgo: "2m",
-    unread: 2,
-  },
-  {
-    id: "t2",
-    name: "Diego Romero",
-    verified: true,
-    preview: "Jar's by the mailboxes — enjoy!",
-    timeAgo: "1h",
-  },
-  {
-    id: "t3",
-    name: "Lin Park",
-    preview: "Coffee tomorrow then? ☕️",
-    timeAgo: "Yesterday",
-    unread: 1,
-  },
-  {
-    id: "t4",
-    name: "Tomás Reyes",
-    preview: "Vet went well, thanks again for the lift.",
-    timeAgo: "Mon",
-  },
-  {
-    id: "t5",
-    name: "Maya Brouwer",
-    verified: true,
-    preview: "Owner picked up the cat 🐈",
-    timeAgo: "Sun",
-  },
-];
+import { fetchConversations, formatTimeAgo } from "@/lib/messaging";
 
 export default function Messages() {
+  const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (mounted) setUserId(data.user?.id ?? null);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const { data: conversations, isLoading } = useQuery({
+    queryKey: ["conversations", userId],
+    queryFn: () => fetchConversations(userId!),
+    enabled: !!userId,
+    staleTime: 0,
+  });
+
+  const threads: MessageThread[] = (conversations ?? []).map((c) => ({
+    id: c.partnerId,
+    name: c.partnerName,
+    avatar: c.partnerAvatar ?? undefined,
+    preview: c.lastMessage,
+    timeAgo: formatTimeAgo(c.lastMessageAt),
+    unread: c.unreadCount || undefined,
+  }));
+
   const filtered = threads.filter(
     (t) =>
       !query ||
@@ -71,15 +65,30 @@ export default function Messages() {
       </header>
 
       <main className="flex-1 px-2 pt-2 pb-28">
-        {filtered.map((t) => (
-          <Link key={t.id} to="/chat/$id" params={{ id: t.id }} className="block">
-            <MessageThreadItem thread={t} />
-          </Link>
-        ))}
-        {filtered.length === 0 && (
+        {isLoading && (
           <p className="py-12 text-center text-sm text-muted-foreground">
-            No conversations yet.
+            Loading conversations…
           </p>
+        )}
+        {!isLoading &&
+          filtered.map((t) => (
+            <MessageThreadItem
+              key={t.id}
+              thread={t}
+              onClick={(id) => navigate({ to: "/chat/$id", params: { id } })}
+            />
+          ))}
+        {!isLoading && filtered.length === 0 && (
+          <div className="px-4 py-12 text-center">
+            <p className="text-sm font-medium text-foreground">No conversations yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Open a neighbour's profile and tap{" "}
+              <Link to="/browse" className="underline">
+                Message
+              </Link>{" "}
+              to start chatting.
+            </p>
+          </div>
         )}
       </main>
 
