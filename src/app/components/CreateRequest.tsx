@@ -1,18 +1,56 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Camera, MapPin } from "lucide-react";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { createPost } from "@/lib/posts";
 import { MobileShell, PrimaryButton, LabeledField, ScreenHeader } from "./patterns/shell";
 
 const categories = ["Help", "Borrow", "Ride", "Errand", "Other"];
 const urgencies = [
-  { id: "low", label: "Whenever" },
-  { id: "medium", label: "Today" },
-  { id: "high", label: "ASAP" },
+  { id: "low" as const, label: "Whenever" },
+  { id: "medium" as const, label: "Today" },
+  { id: "high" as const, label: "ASAP" },
 ];
 
 export default function CreateRequest() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
   const [cat, setCat] = useState("Help");
-  const [urgency, setUrgency] = useState("medium");
+  const [urgency, setUrgency] = useState<"low" | "medium" | "high">("medium");
+
+  const { data: profile } = useQuery({
+    queryKey: ["create-post-profile"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("neighbourhood, building")
+        .eq("id", u.user.id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => {
+      toast.success("Post shared with your neighbours");
+      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+      navigate({ to: "/success", search: { kind: "request" } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const canSubmit = title.trim().length > 0 && !mutation.isPending;
+  const clusterLabel = profile?.neighbourhood
+    ? `${profile.building ? profile.building + " · " : ""}${profile.neighbourhood}`
+    : "Set your location to post";
 
   return (
     <MobileShell>
@@ -21,6 +59,8 @@ export default function CreateRequest() {
       <main className="flex-1 space-y-5 px-4 pb-32">
         <LabeledField label="What do you need?">
           <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Borrow a step ladder for an hour"
             className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-ring"
           />
@@ -28,6 +68,8 @@ export default function CreateRequest() {
 
         <LabeledField label="Details" hint="Be kind and specific. Aim for 1–2 short paragraphs.">
           <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
             rows={5}
             placeholder="Add timing, where to meet, anything that helps a neighbour say yes."
             className="w-full resize-none rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-ring"
@@ -83,23 +125,29 @@ export default function CreateRequest() {
         <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
           <div className="inline-flex items-center gap-2 text-sm">
             <MapPin className="h-4 w-4 text-primary" />
-            Cluster D18 · Greenview Heights
+            {clusterLabel}
           </div>
           <span className="text-xs text-muted-foreground">Visible only here</span>
         </div>
 
         <button
           type="button"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground hover:bg-secondary"
+          disabled
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground"
         >
-          <Camera className="h-4 w-4" /> Add a photo (optional)
+          <Camera className="h-4 w-4" /> Add a photo (coming soon)
         </button>
       </main>
 
       <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-        <Link to="/success" search={{ kind: "request" }}>
-          <PrimaryButton>Post request</PrimaryButton>
-        </Link>
+        <PrimaryButton
+          disabled={!canSubmit}
+          onClick={() =>
+            mutation.mutate({ title, body, category: cat, urgency })
+          }
+        >
+          {mutation.isPending ? "Posting…" : "Post request"}
+        </PrimaryButton>
       </div>
     </MobileShell>
   );
