@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Chat from "@/app/components/Chat";
 
-export const Route = createFileRoute("/chat/$id")({
+export const Route = createFileRoute("/_authenticated/chat/$id")({
   head: () => ({
     meta: [
       { title: "Chat — Go Neighbours" },
