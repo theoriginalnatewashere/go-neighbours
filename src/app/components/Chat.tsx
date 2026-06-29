@@ -17,7 +17,7 @@ import {
 } from "@/lib/messaging";
 
 export default function Chat() {
-  const { id: otherUserId } = useParams({ from: "/chat/$id" });
+  const { id: otherUserId } = useParams({ from: "/_authenticated/chat/$id" });
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
