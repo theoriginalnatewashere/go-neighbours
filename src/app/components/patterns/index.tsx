@@ -185,6 +185,9 @@ export function PostCard({
   expandable,
   expanded,
   onToggle,
+  canManage,
+  onEdit,
+  onDelete,
 }: {
   post: Post;
   onLike?: (id: string) => void;
@@ -192,7 +195,11 @@ export function PostCard({
   expandable?: boolean;
   expanded?: boolean;
   onToggle?: (id: string) => void;
+  canManage?: boolean;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) {
+
   const interactive = expandable && !!onToggle;
   const isOpen = !!expanded;
 
