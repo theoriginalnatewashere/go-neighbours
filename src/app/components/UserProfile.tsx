@@ -40,9 +40,10 @@ export default function UserProfile() {
       if (!u.user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, display_name, avatar_url, bio, neighbourhood, building, skills, interests, tenure, onboarding_completed")
+        .select("full_name, display_name, avatar_url, bio, neighbourhood, building, skills, interests, tenure, onboarding_completed, verification_status")
         .eq("id", u.user.id)
         .maybeSingle();
+
       setProfile(data as ProfileData | null);
       setLoading(false);
     })();
