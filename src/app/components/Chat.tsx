@@ -1,37 +1,153 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { Image as ImageIcon, Send } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Image as ImageIcon, Loader2, Send } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { NeighborAvatar } from "./patterns";
 import { MobileShell, ScreenHeader } from "./patterns/shell";
 import { cn } from "@/lib/utils";
-
-type Msg = { id: string; text: string; mine: boolean; time: string };
-
-const seed: Msg[] = [
-  { id: "1", text: "Hi! Saw your request — I'm heading to the shop now.", mine: true, time: "14:02" },
-  { id: "2", text: "Oh wow, thank you so much 🙏", mine: false, time: "14:03" },
-  { id: "3", text: "What do you need exactly?", mine: true, time: "14:03" },
-  { id: "4", text: "Bread, milk, and a half-dozen eggs. I'll send the money over.", mine: false, time: "14:05" },
-  { id: "5", text: "No rush on the money — pay back whenever. Flat number?", mine: true, time: "14:06" },
-];
+import {
+  fetchMessages,
+  formatClock,
+  getOrCreateConversation,
+  markConversationRead,
+  sendMessage,
+  type ChatMessage,
+} from "@/lib/messaging";
 
 export default function Chat() {
-  const { id } = useParams({ from: "/chat/$id" });
-  const [msgs, setMsgs] = useState<Msg[]>(seed);
+  const { id: otherUserId } = useParams({ from: "/chat/$id" });
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [resolving, setResolving] = useState(true);
+  const [partnerName, setPartnerName] = useState("Neighbour");
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  const send = () => {
-    if (!text.trim()) return;
-    setMsgs((m) => [
-      ...m,
-      {
-        id: String(m.length + 1),
-        text: text.trim(),
-        mine: true,
-        time: "now",
-      },
-    ]);
+  // Resolve current user + conversation
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!mounted) return;
+      if (!u.user) {
+        setResolving(false);
+        return;
+      }
+      setUserId(u.user.id);
+      try {
+        const convId = await getOrCreateConversation(otherUserId);
+        if (!mounted) return;
+        setConversationId(convId);
+        // Fetch partner display name via the security-definer RPC
+        const { data: partners } = await supabase.rpc("get_conversation_partners");
+        const partner = (partners ?? []).find(
+          (p: { conversation_id: string; user_id: string; display_name: string | null; full_name: string | null }) =>
+            p.conversation_id === convId,
+        );
+        if (partner) {
+          setPartnerName(partner.full_name || partner.display_name || "Neighbour");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Couldn't open this conversation");
+      } finally {
+        if (mounted) setResolving(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [otherUserId]);
+
+  const { data: messages = [] } = useQuery({
+    queryKey: ["messages", conversationId],
+    queryFn: () => fetchMessages(conversationId!),
+    enabled: !!conversationId,
+    staleTime: 0,
+  });
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!conversationId) return;
+    const channel = supabase
+      .channel(`messages:${conversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const m = payload.new as {
+            id: string;
+            conversation_id: string;
+            sender_id: string;
+            body: string;
+            created_at: string;
+          };
+          queryClient.setQueryData<ChatMessage[]>(
+            ["messages", conversationId],
+            (prev = []) => {
+              if (prev.some((x) => x.id === m.id)) return prev;
+              return [
+                ...prev,
+                {
+                  id: m.id,
+                  conversationId: m.conversation_id,
+                  senderId: m.sender_id,
+                  body: m.body,
+                  createdAt: m.created_at,
+                },
+              ];
+            },
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [conversationId, queryClient]);
+
+  // Mark read whenever messages change
+  useEffect(() => {
+    if (conversationId && userId && messages.length) {
+      void markConversationRead(conversationId, userId).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["conversations", userId] });
+      });
+    }
+  }, [conversationId, userId, messages.length, queryClient]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+  }, [messages.length]);
+
+  const send = async () => {
+    if (!text.trim() || !conversationId || !userId || sending) return;
+    setSending(true);
+    const body = text.trim();
     setText("");
+    try {
+      const msg = await sendMessage(conversationId, userId, body);
+      queryClient.setQueryData<ChatMessage[]>(
+        ["messages", conversationId],
+        (prev = []) => (prev.some((x) => x.id === msg.id) ? prev : [...prev, msg]),
+      );
+      queryClient.invalidateQueries({ queryKey: ["conversations", userId] });
+    } catch (err) {
+      console.error(err);
+      toast.error("Couldn't send message");
+      setText(body);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -39,40 +155,53 @@ export default function Chat() {
       <ScreenHeader
         backTo="/messages"
         rightSlot={
-          <Link to="/neighbor/$id" params={{ id }}>
-            <NeighborAvatar name="Hana Okafor" size="sm" verified />
+          <Link to="/neighbor/$id" params={{ id: otherUserId }}>
+            <NeighborAvatar name={partnerName} size="sm" />
           </Link>
         }
-        title="Hana Okafor"
-        subtitle="Verified neighbour · D18"
+        title={partnerName}
+        subtitle="Direct message"
       />
 
-      <main className="flex-1 space-y-2 overflow-y-auto px-4 pt-2 pb-4">
-        {msgs.map((m) => (
-          <div
-            key={m.id}
-            className={cn("flex", m.mine ? "justify-end" : "justify-start")}
-          >
-            <div
-              className={cn(
-                "max-w-[78%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm",
-                m.mine
-                  ? "rounded-br-md bg-primary text-primary-foreground"
-                  : "rounded-bl-md bg-card text-foreground",
-              )}
-            >
-              <p>{m.text}</p>
-              <p
+      <main
+        ref={scrollRef}
+        className="flex-1 space-y-2 overflow-y-auto px-4 pt-2 pb-4"
+      >
+        {resolving && (
+          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading conversation…
+          </div>
+        )}
+        {!resolving && messages.length === 0 && (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            No messages yet. Say hello 👋
+          </p>
+        )}
+        {messages.map((m) => {
+          const mine = m.senderId === userId;
+          return (
+            <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+              <div
                 className={cn(
-                  "mt-0.5 text-[10px]",
-                  m.mine ? "text-primary-foreground/70" : "text-muted-foreground",
+                  "max-w-[78%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm",
+                  mine
+                    ? "rounded-br-md bg-primary text-primary-foreground"
+                    : "rounded-bl-md bg-card text-foreground",
                 )}
               >
-                {m.time}
-              </p>
+                <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                <p
+                  className={cn(
+                    "mt-0.5 text-[10px]",
+                    mine ? "text-primary-foreground/70" : "text-muted-foreground",
+                  )}
+                >
+                  {formatClock(m.createdAt)}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </main>
 
       <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur">
@@ -81,6 +210,7 @@ export default function Chat() {
             type="button"
             aria-label="Attach"
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground hover:bg-secondary"
+            disabled
           >
             <ImageIcon className="h-4 w-4" />
           </button>
@@ -89,15 +219,17 @@ export default function Chat() {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Message…"
-            className="flex-1 rounded-full border border-border bg-card px-4 py-2.5 text-sm shadow-sm outline-none focus:ring-2 focus:ring-ring"
+            disabled={!conversationId || sending}
+            className="flex-1 rounded-full border border-border bg-card px-4 py-2.5 text-sm shadow-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
           />
           <button
             type="button"
             onClick={send}
             aria-label="Send"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md shadow-primary/25"
+            disabled={!conversationId || sending || !text.trim()}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md shadow-primary/25 disabled:opacity-60"
           >
-            <Send className="h-4 w-4" />
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </button>
         </div>
       </div>
