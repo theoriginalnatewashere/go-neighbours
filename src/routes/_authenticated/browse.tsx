@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Browse from "@/app/components/Browse";
 
-export const Route = createFileRoute("/browse")({
+export const Route = createFileRoute("/_authenticated/browse")({
   head: () => ({
     meta: [
       { title: "Browse — Go Neighbours" },
