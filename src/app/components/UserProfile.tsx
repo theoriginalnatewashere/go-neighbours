@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Loader2, LogOut, MapPin, Settings, Shield } from "lucide-react";
+import { ChevronRight, Loader2, LogOut, MapPin, Settings, Shield, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

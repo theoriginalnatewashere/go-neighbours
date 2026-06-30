@@ -29,6 +29,7 @@ import { Route as AuthenticatedCreateRequestRouteImport } from './routes/_authen
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedRequestIdRouteImport } from './routes/_authenticated/request.$id'
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
+import { Route as AuthenticatedAdminVerificationsRouteImport } from './routes/_authenticated/admin.verifications'
 
 const VerifyAddressRoute = VerifyAddressRouteImport.update({
   id: '/verify-address',
@@ -130,6 +131,12 @@ const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
   path: '/chat/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminVerificationsRoute =
+  AuthenticatedAdminVerificationsRouteImport.update({
+    id: '/admin/verifications',
+    path: '/admin/verifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/request/$id': typeof AuthenticatedRequestIdRoute
 }
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/request/$id': typeof AuthenticatedRequestIdRoute
 }
@@ -193,6 +202,7 @@ export interface FileRoutesById {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/_authenticated/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/request/$id': typeof AuthenticatedRequestIdRoute
 }
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/admin/verifications'
     | '/chat/$id'
     | '/request/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/admin/verifications'
     | '/chat/$id'
     | '/request/$id'
   id:
@@ -259,6 +271,7 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/_authenticated/admin/verifications'
     | '/_authenticated/chat/$id'
     | '/_authenticated/request/$id'
   fileRoutesById: FileRoutesById
@@ -419,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/verifications': {
+      id: '/_authenticated/admin/verifications'
+      path: '/admin/verifications'
+      fullPath: '/admin/verifications'
+      preLoaderRoute: typeof AuthenticatedAdminVerificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -427,6 +447,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateRequestRoute: typeof AuthenticatedCreateRequestRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
+  AuthenticatedAdminVerificationsRoute: typeof AuthenticatedAdminVerificationsRoute
   AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
   AuthenticatedRequestIdRoute: typeof AuthenticatedRequestIdRoute
 }
@@ -436,6 +457,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateRequestRoute: AuthenticatedCreateRequestRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
+  AuthenticatedAdminVerificationsRoute: AuthenticatedAdminVerificationsRoute,
   AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
   AuthenticatedRequestIdRoute: AuthenticatedRequestIdRoute,
 }
