@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import {
   BottomNav,
   CategoryFilter,
   PostCard,
   type Category,
-  type Post,
 } from "./patterns";
 import { MobileShell } from "./patterns/shell";
+import { listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
 
 const categories: Category[] = [
   { id: "all", label: "All" },
@@ -16,53 +17,7 @@ const categories: Category[] = [
   { id: "offer", label: "Offers" },
   { id: "events", label: "Events" },
   { id: "lost", label: "Lost & found" },
-];
-
-const requests: (Post & { urgency?: "low" | "medium" | "high" })[] = [
-  {
-    id: "r1",
-    author: { name: "Hana Okafor", verified: true },
-    category: "Help",
-    timeAgo: "5 min ago",
-    title: "Pick up groceries from corner shop?",
-    body: "Sprained my ankle yesterday. Just need bread, milk, and eggs — happy to pay back via card.",
-    likes: 3,
-    comments: 1,
-    urgency: "high",
-  },
-  {
-    id: "r2",
-    author: { name: "Tomás Reyes" },
-    category: "Help",
-    timeAgo: "30 min ago",
-    title: "Ride to vet at 4pm?",
-    body: "Cat needs a check-up. Vet is 10 min away. Will cover fuel + a coffee.",
-    likes: 5,
-    comments: 2,
-    urgency: "medium",
-  },
-  {
-    id: "r3",
-    author: { name: "Priya Singh", verified: true },
-    category: "Offers",
-    timeAgo: "1 h ago",
-    title: "Free piano lessons for kids — Saturdays",
-    body: "Music teacher here, offering 30-min sessions. First come first served, age 6+.",
-    likes: 18,
-    comments: 7,
-    urgency: "low",
-  },
-  {
-    id: "r4",
-    author: { name: "Noah Klein" },
-    category: "Help",
-    timeAgo: "2 h ago",
-    title: "Borrow a drill for an hour?",
-    body: "Hanging a shelf in the living room. Returning it the same evening.",
-    likes: 2,
-    comments: 0,
-    urgency: "low",
-  },
+  { id: "share", label: "Share" },
 ];
 
 const urgencyTone: Record<string, string> = {
@@ -71,31 +26,45 @@ const urgencyTone: Record<string, string> = {
   low: "bg-secondary text-secondary-foreground",
 };
 
+const categoryMap: Record<string, string[]> = {
+  help: ["Help", "Borrow", "Ride", "Errand"],
+  offer: ["Offer", "Offers"],
+  events: ["Event", "Events"],
+  lost: ["Lost", "Lost & found"],
+  share: ["Share", "Other"],
+};
+
 export default function Browse() {
   const [active, setActive] = useState("all");
   const [query, setQuery] = useState("");
 
-  const filtered = requests.filter((r) => {
-    const matchCat =
-      active === "all" ||
-      r.category?.toLowerCase().startsWith(
-        categories.find((c) => c.id === active)?.label.toLowerCase().slice(0, 3) ?? "",
-      );
-    const q = query.trim().toLowerCase();
-    const matchQ =
-      !q ||
-      r.title?.toLowerCase().includes(q) ||
-      r.body.toLowerCase().includes(q) ||
-      r.author.name.toLowerCase().includes(q);
-    return matchCat && matchQ;
+  // RLS on `posts` restricts results to the signed-in user's cluster.
+  const { data: posts = [], isLoading } = useQuery<FeedPost[]>({
+    queryKey: ["cluster-posts"],
+    queryFn: listClusterPosts,
+    staleTime: 0,
   });
+
+  const filtered = useMemo(() => {
+    const allowed = active === "all" ? null : categoryMap[active] ?? [];
+    const q = query.trim().toLowerCase();
+    return posts.filter((p) => {
+      const matchCat = !allowed || allowed.includes(p.category);
+      const matchQ =
+        !q ||
+        p.title.toLowerCase().includes(q) ||
+        p.body.toLowerCase().includes(q) ||
+        (p.author_name ?? "").toLowerCase().includes(q);
+      return matchCat && matchQ;
+    });
+  }, [posts, active, query]);
 
   return (
     <MobileShell>
       <header className="sticky top-0 z-20 bg-background/85 px-4 pt-4 pb-3 backdrop-blur">
         <div className="mb-3 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Browse</h1>
-          <span className="text-xs text-muted-foreground">Cluster D18</span>
+          <span className="text-xs text-muted-foreground">Your cluster</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center gap-2 rounded-full bg-card px-3.5 py-2.5 shadow-sm">
@@ -126,28 +95,46 @@ export default function Browse() {
       </div>
 
       <main className="flex-1 space-y-3 px-4 pb-28">
-        {filtered.map((r) => (
+        {filtered.map((p) => (
           <Link
-            key={r.id}
+            key={p.id}
             to="/request/$id"
-            params={{ id: r.id }}
+            params={{ id: p.id }}
             className="block"
           >
             <div className="relative">
-              {r.urgency && (
+              {p.urgency && (
                 <span
-                  className={`absolute top-3 right-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${urgencyTone[r.urgency]}`}
+                  className={`absolute top-3 right-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${urgencyTone[p.urgency]}`}
                 >
-                  {r.urgency}
+                  {p.urgency}
                 </span>
               )}
-              <PostCard post={r} />
+              <PostCard
+                post={{
+                  id: p.id,
+                  author: {
+                    name: p.author_name || "Neighbour",
+                    avatar: p.author_avatar_url ?? undefined,
+                    verified: p.author_verified,
+                  },
+                  category: p.category,
+                  timeAgo: timeAgo(p.created_at),
+                  title: p.title,
+                  body: p.body,
+                  likes: 0,
+                  comments: 0,
+                  urgency: p.urgency,
+                }}
+              />
             </div>
           </Link>
         ))}
-        {filtered.length === 0 && (
+        {!isLoading && filtered.length === 0 && (
           <p className="py-12 text-center text-sm text-muted-foreground">
-            No matches — try a different category.
+            {posts.length === 0
+              ? "No posts in your cluster yet — be the first to share."
+              : "No matches — try a different category."}
           </p>
         )}
       </main>
