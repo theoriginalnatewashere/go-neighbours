@@ -122,9 +122,9 @@ export default function RequestDetail() {
         )}
       </main>
 
-      {post && (
+      {post && post.author_id && (
         <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-          <Link to="/chat/$id" params={{ id }}>
+          <Link to="/chat/$id" params={{ id: post.author_id }}>
             <PrimaryButton icon={MessageCircle}>I can help</PrimaryButton>
           </Link>
         </div>
