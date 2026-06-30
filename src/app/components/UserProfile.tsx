@@ -33,18 +33,32 @@ export default function UserProfile() {
   const queryClient = useQueryClient();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rejectedNote, setRejectedNote] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, display_name, avatar_url, bio, neighbourhood, building, skills, interests, tenure, onboarding_completed, verification_status")
-        .eq("id", u.user.id)
-        .maybeSingle();
+      const [{ data }, { data: roles }, { data: latestReq }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, display_name, avatar_url, bio, neighbourhood, building, skills, interests, tenure, onboarding_completed, verification_status")
+          .eq("id", u.user.id)
+          .maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", u.user.id),
+        supabase
+          .from("verification_requests")
+          .select("status, reviewer_note")
+          .eq("user_id", u.user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
 
       setProfile(data as ProfileData | null);
+      setIsAdmin((roles ?? []).some((r) => r.role === "admin"));
+      if (latestReq?.status === "rejected") setRejectedNote(latestReq.reviewer_note ?? null);
       setLoading(false);
     })();
   }, []);
