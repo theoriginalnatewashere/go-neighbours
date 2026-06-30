@@ -286,7 +286,9 @@ export function AddressVerification() {
             ? "Verification pending"
             : status === "approved"
               ? "Already verified"
-              : "Apply for verification"}
+              : status === "rejected"
+                ? "Resubmit for verification"
+                : "Apply for verification"}
         </button>
 
 
