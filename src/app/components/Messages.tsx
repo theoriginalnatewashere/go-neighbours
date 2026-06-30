@@ -73,9 +73,12 @@ export default function Messages() {
         {!isLoading &&
           filtered.map((t) => (
             <MessageThreadItem
-              key={t.id}
+              key={t.id || t.preview}
               thread={t}
-              onClick={(id) => navigate({ to: "/chat/$id", params: { id } })}
+              onClick={(id) => {
+                if (!id) return;
+                navigate({ to: "/chat/$id", params: { id } });
+              }}
             />
           ))}
         {!isLoading && filtered.length === 0 && (
