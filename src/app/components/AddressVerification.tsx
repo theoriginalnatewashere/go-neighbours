@@ -254,6 +254,15 @@ export function AddressVerification() {
             </p>
           </div>
         )}
+        {status === "rejected" && (
+          <div className="mt-4 rounded-2xl bg-destructive/10 text-destructive px-3.5 py-2.5">
+            <p className="text-[12.5px] font-semibold">Your previous request was rejected.</p>
+            {reviewerNote && (
+              <p className="mt-1 text-[12.5px] leading-snug">Reviewer note: {reviewerNote}</p>
+            )}
+            <p className="mt-1 text-[12.5px]">Update the details below and resubmit.</p>
+          </div>
+        )}
         {status === "approved" && (
           <div className="mt-4 flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-3.5 py-2.5">
             <ShieldCheck className="h-4 w-4 shrink-0" strokeWidth={2} />
