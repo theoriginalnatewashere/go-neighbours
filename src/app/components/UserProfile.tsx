@@ -115,6 +115,20 @@ export default function UserProfile() {
           </div>
         </section>
 
+        {profile?.verification_status === "rejected" && (
+          <section className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+            <p className="font-semibold text-destructive">Verification was rejected</p>
+            {rejectedNote && (
+              <p className="mt-1 text-foreground/80">Reviewer note: {rejectedNote}</p>
+            )}
+            <Link to="/verify-address" className="mt-2 inline-block text-sm font-medium text-primary underline">
+              Update details and resubmit
+            </Link>
+          </section>
+        )}
+
+
+
 
         {profile?.bio && (
           <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
