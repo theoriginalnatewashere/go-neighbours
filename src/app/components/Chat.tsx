@@ -172,7 +172,18 @@ export default function Chat() {
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading conversation…
           </div>
         )}
-        {!resolving && messages.length === 0 && (
+        {!resolving && !conversationId && (
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">Conversation unavailable</p>
+            <p className="mt-1">
+              This chat may have been removed or you don't have access to it.
+            </p>
+            <Link to="/messages" className="mt-3 inline-block text-primary underline">
+              Back to Messages
+            </Link>
+          </div>
+        )}
+        {!resolving && conversationId && messages.length === 0 && (
           <p className="py-12 text-center text-sm text-muted-foreground">
             No messages yet. Say hello 👋
           </p>
