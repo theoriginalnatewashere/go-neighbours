@@ -180,6 +180,17 @@ export default function UserProfile() {
           })}
         </section>
 
+        {isAdmin && (
+          <Link
+            to="/admin/verifications"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-secondary"
+          >
+            <ShieldCheck className="h-4 w-4" /> Review verifications
+          </Link>
+        )}
+
+
+
         <button
           type="button"
           onClick={handleSignOut}
