@@ -70,6 +70,7 @@ export function AddressVerification() {
   const [address, setAddress] = useState("");
   const [neighbourhood, setNeighbourhood] = useState("");
   const [status, setStatus] = useState<"unverified" | "pending" | "approved" | "rejected">("unverified");
+  const [reviewerNote, setReviewerNote] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -89,6 +90,17 @@ export function AddressVerification() {
         setAddress(p.address ?? "");
         setNeighbourhood(p.neighbourhood ?? "");
         setStatus((p.verification_status as typeof status) ?? "unverified");
+      }
+      // Fetch latest request to surface reviewer note when rejected
+      const { data: latest } = await supabase
+        .from("verification_requests")
+        .select("status, reviewer_note")
+        .eq("user_id", u.user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latest?.status === "rejected") {
+        setReviewerNote(latest.reviewer_note ?? null);
       }
       setLoading(false);
     })();
@@ -120,13 +132,20 @@ export function AddressVerification() {
         neighbourhood: neighbourhood.trim(),
       };
 
+      // Update safe profile fields first (address/onboarding). verification_status
+      // and verification_submitted_at are managed by a database trigger.
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ ...payload, onboarding_completed: true })
+        .eq("id", userId);
+      if (profileError) throw profileError;
+
       const { error: reqError } = await supabase.from("verification_requests").insert({
         user_id: userId,
         status: "pending",
         ...payload,
       });
       if (reqError) {
-        // Unique partial index → duplicate pending
         if (reqError.code === "23505") {
           toast.info("You already have a verification request under review.");
           navigate({ to: "/verify-address/submitted" });
@@ -134,17 +153,6 @@ export function AddressVerification() {
         }
         throw reqError;
       }
-
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          ...payload,
-          verification_status: "pending",
-          verification_submitted_at: new Date().toISOString(),
-          onboarding_completed: true,
-        })
-        .eq("id", userId);
-      if (profileError) throw profileError;
 
       toast.success("Verification request submitted — we'll review it within 24 hours.");
       navigate({ to: "/verify-address/submitted" });
