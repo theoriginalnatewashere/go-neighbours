@@ -31,6 +31,21 @@ export async function listClusterPosts(): Promise<FeedPost[]> {
   return (data ?? []) as PostRow[];
 }
 
+export async function listMyPosts(limit = 50): Promise<FeedPost[]> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return [];
+  const { data, error } = await supabase
+    .from("posts")
+    .select(
+      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count",
+    )
+    .eq("author_id", u.user.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as PostRow[];
+}
+
 export type NewPostInput = {
   title: string;
   body: string;
