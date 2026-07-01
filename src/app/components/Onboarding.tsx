@@ -67,13 +67,16 @@ export function Onboarding() {
   return (
     <main className="min-h-screen bg-background flex justify-center">
       <div className="w-full max-w-md px-6 pt-12 pb-8 flex flex-col">
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-8 h-[20vh] min-h-[128px] max-h-[240px]">
           <img
             src={logoAsset.url}
             alt="Go Neighbours logo"
-            className="h-32 w-32 object-contain"
+            width={512}
+            height={512}
+            className="h-full w-auto max-w-full object-contain"
           />
         </div>
+
 
         <h1 className="text-3xl font-semibold tracking-tight text-center text-foreground">
           Welcome to Go Neighbours
