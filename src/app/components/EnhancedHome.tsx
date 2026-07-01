@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, Clock, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
+import { Bell, Clock, Heart, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { deletePost, listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
+import { likePost, unlikePost, listMyLikedPostIds, listMyLikedPosts } from "@/lib/likes";
 import {
   AlertDialog,
   AlertDialogAction,
