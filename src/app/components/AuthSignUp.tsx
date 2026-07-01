@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { getRedirectForUser } from "@/lib/profileRouting";
+import authIllustration from "@/assets/auth-neighbours-illustration.png.asset.json";
 
 type Mode = "signup" | "login";
 
