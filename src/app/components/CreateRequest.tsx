@@ -70,6 +70,7 @@ export default function CreateRequest() {
     onSuccess: () => {
       toast.success("Post shared with your neighbours");
       qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+      qc.invalidateQueries({ queryKey: ["my-posts"] });
       navigate({ to: "/success", search: { kind: "request" } });
     },
     onError: (e: Error) => toast.error(e.message),
