@@ -81,6 +81,7 @@ export function AddressVerification() {
   const [reviewerNote, setReviewerNote] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showSubmittedModal, setShowSubmittedModal] = useState(false);
 
   useEffect(() => {
     (async () => {
