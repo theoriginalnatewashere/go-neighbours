@@ -1,16 +1,19 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { Clock, Flag, Heart, MapPin, MessageCircle, Share2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   NeighborAvatar,
   SafetyCard,
   TrustBadge,
 } from "./patterns";
 import { MobileShell, PrimaryButton, ScreenHeader } from "./patterns/shell";
-import { getPost, timeAgo } from "@/lib/posts";
+import { getPost, timeAgo, type FeedPost } from "@/lib/posts";
+import { likePost, unlikePost, listMyLikedPostIds } from "@/lib/likes";
 
 export default function RequestDetail() {
   const { id } = useParams({ from: "/_authenticated/request/$id" });
+  const qc = useQueryClient();
 
   // RLS returns null when the post is in another cluster, so cross-cluster
   // URL access is blocked at the database, not in the UI.
