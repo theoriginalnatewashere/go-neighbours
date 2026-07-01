@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Mail, Lock, Loader2 } from "lucide-react";
+import authIllustration from "@/assets/auth-neighbours.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
@@ -85,11 +86,16 @@ export function AuthSignUp() {
   return (
     <main className="min-h-screen bg-background flex justify-center">
       <div className="w-full max-w-md px-6 pt-10 pb-8 flex flex-col">
-        <div className="mx-auto mt-2 mb-8 flex h-40 w-full max-w-xs items-center justify-center rounded-3xl bg-secondary/60">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-card border border-border">
-            <Lock className="h-5 w-5 text-primary" strokeWidth={2.2} />
-          </div>
+        <div className="mx-auto mt-2 mb-8 flex h-40 w-full max-w-xs items-center justify-center overflow-hidden rounded-3xl bg-secondary/60">
+          <img
+            src={authIllustration.url}
+            alt="Neighbours chatting on a friendly local street"
+            width={1456}
+            height={1024}
+            className="max-w-full h-auto max-h-full w-auto object-contain"
+          />
         </div>
+
 
         <h1 className="text-3xl font-semibold tracking-tight text-center text-foreground">
           {isSignup ? "Join Go Neighbours" : "Welcome back"}
