@@ -81,6 +81,7 @@ export default function CreateRequest() {
     onSuccess: () => {
       toast.success("Post updated");
       qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+      qc.invalidateQueries({ queryKey: ["my-posts"] });
       qc.invalidateQueries({ queryKey: ["edit-post", editId] });
       navigate({ to: "/home" });
     },
