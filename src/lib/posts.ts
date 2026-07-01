@@ -23,7 +23,7 @@ export async function listClusterPosts(): Promise<FeedPost[]> {
   const { data, error } = await supabase
     .from("posts")
     .select(
-      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified",
+      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count",
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -84,7 +84,7 @@ export async function getPost(id: string): Promise<PostRow | null> {
   const { data, error } = await supabase
     .from("posts")
     .select(
-      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified",
+      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count",
     )
     .eq("id", id)
     .maybeSingle();
