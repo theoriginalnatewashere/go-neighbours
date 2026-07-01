@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, Clock, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
+import { Bell, Clock, Heart, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { deletePost, listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
+import { likePost, unlikePost, listMyLikedPostIds, listMyLikedPosts } from "@/lib/likes";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,6 +85,61 @@ export default function EnhancedHome() {
     queryFn: listClusterPosts,
     staleTime: 0,
   });
+
+  const [showAllLiked, setShowAllLiked] = useState(false);
+
+  const { data: likedIds = new Set<string>() } = useQuery({
+    queryKey: ["my-liked-ids"],
+    queryFn: listMyLikedPostIds,
+    staleTime: 0,
+  });
+
+  const { data: likedPosts = [] } = useQuery<FeedPost[]>({
+    queryKey: ["my-liked-posts"],
+    queryFn: () => listMyLikedPosts(50),
+    staleTime: 0,
+  });
+
+  const toggleLike = useMutation({
+    mutationFn: async (p: { id: string; liked: boolean }) => {
+      if (p.liked) await unlikePost(p.id);
+      else await likePost(p.id);
+    },
+    onMutate: async (p) => {
+      await qc.cancelQueries({ queryKey: ["my-liked-ids"] });
+      const prev = qc.getQueryData<Set<string>>(["my-liked-ids"]) ?? new Set();
+      const next = new Set(prev);
+      if (p.liked) next.delete(p.id);
+      else next.add(p.id);
+      qc.setQueryData(["my-liked-ids"], next);
+      const feed = qc.getQueryData<FeedPost[]>(["cluster-posts"]);
+      if (feed) {
+        qc.setQueryData<FeedPost[]>(
+          ["cluster-posts"],
+          feed.map((x) =>
+            x.id === p.id
+              ? { ...x, likes_count: Math.max(0, x.likes_count + (p.liked ? -1 : 1)) }
+              : x,
+          ),
+        );
+      }
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["my-liked-ids"], ctx.prev);
+      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+      toast.error("Could not update like");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["my-liked-ids"] });
+      qc.invalidateQueries({ queryKey: ["my-liked-posts"] });
+      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+    },
+  });
+
+  const handleLike = (id: string) => {
+    toggleLike.mutate({ id, liked: likedIds.has(id) });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: deletePost,
@@ -241,6 +297,7 @@ export default function EnhancedHome() {
                 canManage={isAuthor}
                 onEdit={handleEdit}
                 onDelete={(id) => setPendingDeleteId(id)}
+                onLike={handleLike}
                 post={{
                   id: p.id,
                   author: {
@@ -252,7 +309,8 @@ export default function EnhancedHome() {
                   timeAgo: timeAgo(p.created_at),
                   title: p.title,
                   body: p.body,
-                  likes: 0,
+                  likes: p.likes_count,
+                  liked: likedIds.has(p.id),
                   comments: 0,
                   urgency: p.urgency,
                 }}
@@ -260,7 +318,63 @@ export default function EnhancedHome() {
             );
           })
         )}
+
+        {/* Liked posts */}
+        <section className="mt-6">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="inline-flex items-center gap-2 text-base font-semibold">
+              <Heart className="h-4 w-4 text-primary" /> Liked posts
+            </h2>
+            {likedPosts.length > 5 && (
+              <button
+                type="button"
+                onClick={() => setShowAllLiked((v) => !v)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {showAllLiked ? "Show less" : "See all"}
+              </button>
+            )}
+          </div>
+          {likedPosts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card/60 p-5 text-center text-sm text-muted-foreground">
+              Posts you like will appear here.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {(showAllLiked ? likedPosts : likedPosts.slice(0, 5)).map((p) => {
+                const isAuthor = !!currentUserId && p.author_id === currentUserId;
+                return (
+                  <PostCard
+                    key={`liked-${p.id}`}
+                    canManage={isAuthor}
+                    onEdit={handleEdit}
+                    onDelete={(id) => setPendingDeleteId(id)}
+                    onLike={handleLike}
+                    onComment={(id) => navigate({ to: "/request/$id", params: { id } })}
+                    post={{
+                      id: p.id,
+                      author: {
+                        name: p.author_name || "Neighbour",
+                        avatar: p.author_avatar_url ?? undefined,
+                        verified: p.author_verified,
+                      },
+                      category: p.category,
+                      timeAgo: timeAgo(p.created_at),
+                      title: p.title,
+                      body: p.body,
+                      likes: p.likes_count,
+                      liked: likedIds.has(p.id),
+                      comments: 0,
+                      urgency: p.urgency,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
       </main>
+
 
       {isVerified ? (
         <Link

@@ -168,6 +168,7 @@ export type Post = {
   title?: string;
   body: string;
   likes: number;
+  liked?: boolean;
   comments: number;
   urgency?: "low" | "medium" | "high";
 };
@@ -338,9 +339,16 @@ export function PostCard({
             stop(e);
             onLike?.(post.id);
           }}
-          className="inline-flex items-center gap-1.5 hover:text-primary"
+          aria-pressed={!!post.liked}
+          aria-label={post.liked ? "Unlike post" : "Like post"}
+          className={cn(
+            "inline-flex items-center gap-1.5 transition-colors",
+            post.liked ? "text-primary" : "hover:text-primary",
+          )}
         >
-          <Heart className="h-4 w-4" />
+          <Heart
+            className={cn("h-4 w-4", post.liked && "fill-current")}
+          />
           {post.likes}
         </button>
         <button
