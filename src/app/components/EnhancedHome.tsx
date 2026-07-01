@@ -197,16 +197,26 @@ export default function EnhancedHome() {
                 Nothing here yet
               </h2>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Be the first to share an update, ask a question, or connect with
-                your neighbours.
+                {isVerified
+                  ? "Be the first to share an update, ask a question, or connect with your neighbours."
+                  : "You can post once your address is verified. In the meantime, browse and message neighbours."}
               </p>
-              <Link
-                to="/create-request"
-                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Plus className="h-4 w-4" />
-                Create a post
-              </Link>
+              {isVerified ? (
+                <Link
+                  to="/create-request"
+                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create a post
+                </Link>
+              ) : (
+                <Link
+                  to="/verify-address"
+                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Verify your address
+                </Link>
+              )}
             </div>
           </div>
         ) : (
@@ -242,13 +252,27 @@ export default function EnhancedHome() {
         )}
       </main>
 
-      <Link
-        to="/create-request"
-        aria-label="Create request"
-        className="fixed right-5 bottom-24 z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95"
-      >
-        <Plus className="h-6 w-6" />
-      </Link>
+      {isVerified ? (
+        <Link
+          to="/create-request"
+          aria-label="Create request"
+          className="fixed right-5 bottom-24 z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95"
+        >
+          <Plus className="h-6 w-6" />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          aria-label="Posting locked until verified"
+          onClick={() =>
+            toast.info("Posting is available once your address is verified.")
+          }
+          className="fixed right-5 bottom-24 z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-muted text-muted-foreground shadow-lg"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
+
       <BottomNav activeId="home" />
 
       <AlertDialog
