@@ -297,6 +297,7 @@ export default function EnhancedHome() {
                 canManage={isAuthor}
                 onEdit={handleEdit}
                 onDelete={(id) => setPendingDeleteId(id)}
+                onLike={handleLike}
                 post={{
                   id: p.id,
                   author: {
@@ -308,7 +309,8 @@ export default function EnhancedHome() {
                   timeAgo: timeAgo(p.created_at),
                   title: p.title,
                   body: p.body,
-                  likes: 0,
+                  likes: p.likes_count,
+                  liked: likedIds.has(p.id),
                   comments: 0,
                   urgency: p.urgency,
                 }}
@@ -316,7 +318,63 @@ export default function EnhancedHome() {
             );
           })
         )}
+
+        {/* Liked posts */}
+        <section className="mt-6">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="inline-flex items-center gap-2 text-base font-semibold">
+              <Heart className="h-4 w-4 text-primary" /> Liked posts
+            </h2>
+            {likedPosts.length > 5 && (
+              <button
+                type="button"
+                onClick={() => setShowAllLiked((v) => !v)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {showAllLiked ? "Show less" : "See all"}
+              </button>
+            )}
+          </div>
+          {likedPosts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card/60 p-5 text-center text-sm text-muted-foreground">
+              Posts you like will appear here.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {(showAllLiked ? likedPosts : likedPosts.slice(0, 5)).map((p) => {
+                const isAuthor = !!currentUserId && p.author_id === currentUserId;
+                return (
+                  <PostCard
+                    key={`liked-${p.id}`}
+                    canManage={isAuthor}
+                    onEdit={handleEdit}
+                    onDelete={(id) => setPendingDeleteId(id)}
+                    onLike={handleLike}
+                    onComment={(id) => navigate({ to: "/request/$id", params: { id } })}
+                    post={{
+                      id: p.id,
+                      author: {
+                        name: p.author_name || "Neighbour",
+                        avatar: p.author_avatar_url ?? undefined,
+                        verified: p.author_verified,
+                      },
+                      category: p.category,
+                      timeAgo: timeAgo(p.created_at),
+                      title: p.title,
+                      body: p.body,
+                      likes: p.likes_count,
+                      liked: likedIds.has(p.id),
+                      comments: 0,
+                      urgency: p.urgency,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
       </main>
+
 
       {isVerified ? (
         <Link
