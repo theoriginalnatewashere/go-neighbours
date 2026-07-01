@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   BottomNav,
   CategoryFilter,
@@ -10,6 +11,7 @@ import {
 } from "./patterns";
 import { MobileShell } from "./patterns/shell";
 import { listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
+import { likePost, unlikePost, listMyLikedPostIds } from "@/lib/likes";
 
 const categories: Category[] = [
   { id: "all", label: "All" },
