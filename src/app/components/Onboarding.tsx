@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Users, ShieldCheck, MessageCircle, type LucideIcon } from "lucide-react";
+import logoAsset from "@/assets/go-neighbours-logo.png.asset.json";
 
 export const features = [
   {
