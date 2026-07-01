@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
+import { Bell, Clock, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,6 +110,7 @@ export default function EnhancedHome() {
   const locationParts = [profile?.building, profile?.neighbourhood].filter(Boolean) as string[];
   const locationLabel = locationParts.length > 0 ? locationParts.join(" · ") : "Set your location";
   const isVerified = profile?.verification_status === "approved";
+  const isPending = profile?.verification_status === "pending";
 
   const filteredPosts = useMemo(() => {
     if (activeCategory === "all") return posts;
@@ -169,6 +170,15 @@ export default function EnhancedHome() {
             <TrustBadge level="new" label="Not verified" />
           )}
         </div>
+
+        {isPending && (
+          <div className="mt-3 flex items-center gap-2 rounded-2xl bg-primary/10 px-3.5 py-2.5 text-primary">
+            <Clock className="h-4 w-4 shrink-0" strokeWidth={2} />
+            <p className="text-[13px] font-medium">
+              Address verification in progress. Posting will be available once approved.
+            </p>
+          </div>
+        )}
       </header>
 
       {/* Filters */}

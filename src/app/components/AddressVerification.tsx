@@ -12,9 +12,17 @@ import {
   Users,
   Info,
   type LucideIcon,
+  Home,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface FieldProps {
   label: string;
@@ -73,6 +81,7 @@ export function AddressVerification() {
   const [reviewerNote, setReviewerNote] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showSubmittedModal, setShowSubmittedModal] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -111,7 +120,7 @@ export function AddressVerification() {
     if (!userId || saving) return;
     if (status === "pending") {
       toast.info("Your verification is already under review.");
-      navigate({ to: "/verify-address/submitted" });
+      setShowSubmittedModal(true);
       return;
     }
     if (status === "approved") {
@@ -148,14 +157,13 @@ export function AddressVerification() {
       if (reqError) {
         if (reqError.code === "23505") {
           toast.info("You already have a verification request under review.");
-          navigate({ to: "/verify-address/submitted" });
+          setShowSubmittedModal(true);
           return;
         }
         throw reqError;
       }
 
-      toast.success("Verification request submitted — we'll review it within 24 hours.");
-      navigate({ to: "/verify-address/submitted" });
+      setShowSubmittedModal(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not submit");
     } finally {
@@ -297,6 +305,33 @@ export function AddressVerification() {
           Secure &amp; private
         </p>
       </form>
+
+      <Dialog open={showSubmittedModal} onOpenChange={setShowSubmittedModal}>
+        <DialogContent className="max-w-sm rounded-2xl border-border bg-card p-6">
+          <DialogHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <ShieldCheck className="h-7 w-7" strokeWidth={2} />
+            </div>
+            <DialogTitle className="text-center text-lg font-semibold">
+              Verification submitted. Review may take up to 24 hours.
+            </DialogTitle>
+            <DialogDescription className="text-center text-sm text-muted-foreground mt-2">
+              While we review your address, you can browse community posts and complete your profile.
+            </DialogDescription>
+          </DialogHeader>
+          <button
+            type="button"
+            onClick={() => {
+              setShowSubmittedModal(false);
+              navigate({ to: "/home" });
+            }}
+            className="mt-4 w-full h-12 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition shadow-sm"
+          >
+            <Home className="h-5 w-5" strokeWidth={2} />
+            Go to Home
+          </button>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
