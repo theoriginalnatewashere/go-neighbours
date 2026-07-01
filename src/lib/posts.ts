@@ -52,6 +52,12 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
       "Set your neighbourhood in your profile before posting so neighbours can see it.",
     );
   }
+  if (profile.verification_status !== "approved") {
+    throw new Error(
+      "Posting is available once your address is verified. We'll notify you when it's approved.",
+    );
+  }
+
 
   const { data, error } = await supabase
     .from("posts")
