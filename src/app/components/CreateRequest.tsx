@@ -33,12 +33,22 @@ export default function CreateRequest() {
       if (!u.user) return null;
       const { data } = await supabase
         .from("profiles")
-        .select("neighbourhood, building")
+        .select("neighbourhood, building, verification_status")
         .eq("id", u.user.id)
         .maybeSingle();
       return data;
     },
   });
+
+  const isVerified = profile?.verification_status === "approved";
+
+  useEffect(() => {
+    if (profile && !isVerified) {
+      toast.info("Posting is available once your address is verified.");
+      navigate({ to: "/verify-address" });
+    }
+  }, [profile, isVerified, navigate]);
+
 
   const { data: existing, isLoading: loadingExisting } = useQuery({
     queryKey: ["edit-post", editId],
