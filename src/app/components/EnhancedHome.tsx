@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, Clock, Heart, MapPin, MessageSquarePlus, Plus, Search } from "lucide-react";
+import { Bell, Clock, FileText, Heart, MapPin, Plus, Search } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { deletePost, listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
+import { deletePost, listMyPosts, timeAgo, type FeedPost } from "@/lib/posts";
 import { likePost, unlikePost, listMyLikedPostIds, listMyLikedPosts } from "@/lib/likes";
 import {
   AlertDialog,
@@ -18,21 +18,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   BottomNav,
-  CategoryFilter,
   PostCard,
   SafetyCard,
   TrustBadge,
-  type Category,
 } from "./patterns";
-
-const categories: Category[] = [
-  { id: "all", label: "All" },
-  { id: "help", label: "Asks for help" },
-  { id: "offer", label: "Offers" },
-  { id: "events", label: "Events" },
-  { id: "lost", label: "Lost & found" },
-  { id: "share", label: "Share" },
-];
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -50,9 +39,10 @@ function firstName(full: string | null | undefined, display: string | null | und
 export default function EnhancedHome() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [activeCategory, setActiveCategory] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [showAllMine, setShowAllMine] = useState(false);
+  const [showAllLiked, setShowAllLiked] = useState(false);
   const toggleExpanded = (id: string) =>
     setExpandedId((cur) => (cur === id ? null : id));
 
@@ -80,13 +70,11 @@ export default function EnhancedHome() {
     staleTime: 0,
   });
 
-  const { data: posts = [] } = useQuery<FeedPost[]>({
-    queryKey: ["cluster-posts"],
-    queryFn: listClusterPosts,
+  const { data: myPosts = [] } = useQuery<FeedPost[]>({
+    queryKey: ["my-posts"],
+    queryFn: () => listMyPosts(50),
     staleTime: 0,
   });
-
-  const [showAllLiked, setShowAllLiked] = useState(false);
 
   const { data: likedIds = new Set<string>() } = useQuery({
     queryKey: ["my-liked-ids"],
@@ -112,27 +100,16 @@ export default function EnhancedHome() {
       if (p.liked) next.delete(p.id);
       else next.add(p.id);
       qc.setQueryData(["my-liked-ids"], next);
-      const feed = qc.getQueryData<FeedPost[]>(["cluster-posts"]);
-      if (feed) {
-        qc.setQueryData<FeedPost[]>(
-          ["cluster-posts"],
-          feed.map((x) =>
-            x.id === p.id
-              ? { ...x, likes_count: Math.max(0, x.likes_count + (p.liked ? -1 : 1)) }
-              : x,
-          ),
-        );
-      }
       return { prev };
     },
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["my-liked-ids"], ctx.prev);
-      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
       toast.error("Could not update like");
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["my-liked-ids"] });
       qc.invalidateQueries({ queryKey: ["my-liked-posts"] });
+      qc.invalidateQueries({ queryKey: ["my-posts"] });
       qc.invalidateQueries({ queryKey: ["cluster-posts"] });
     },
   });
@@ -144,19 +121,21 @@ export default function EnhancedHome() {
   const deleteMutation = useMutation({
     mutationFn: deletePost,
     onMutate: async (id: string) => {
-      await qc.cancelQueries({ queryKey: ["cluster-posts"] });
-      const prev = qc.getQueryData<FeedPost[]>(["cluster-posts"]) ?? [];
-      qc.setQueryData<FeedPost[]>(["cluster-posts"], prev.filter((p) => p.id !== id));
+      await qc.cancelQueries({ queryKey: ["my-posts"] });
+      const prev = qc.getQueryData<FeedPost[]>(["my-posts"]) ?? [];
+      qc.setQueryData<FeedPost[]>(["my-posts"], prev.filter((p) => p.id !== id));
       return { prev };
     },
     onError: (e: Error, _id, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["cluster-posts"], ctx.prev);
+      if (ctx?.prev) qc.setQueryData(["my-posts"], ctx.prev);
       toast.error(e.message || "Could not delete post");
     },
     onSuccess: () => {
       toast.success("Post deleted");
     },
     onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["my-posts"] });
+      qc.invalidateQueries({ queryKey: ["my-liked-posts"] });
       qc.invalidateQueries({ queryKey: ["cluster-posts"] });
       setPendingDeleteId(null);
     },
@@ -168,21 +147,41 @@ export default function EnhancedHome() {
   const isVerified = profile?.verification_status === "approved";
   const isPending = profile?.verification_status === "pending";
 
-  const filteredPosts = useMemo(() => {
-    if (activeCategory === "all") return posts;
-    const map: Record<string, string[]> = {
-      help: ["Help", "Borrow", "Ride", "Errand"],
-      offer: ["Offer", "Offers"],
-      events: ["Event", "Events"],
-      lost: ["Lost", "Lost & found"],
-      share: ["Share", "Other"],
-    };
-    const allowed = map[activeCategory] ?? [];
-    return posts.filter((p) => allowed.includes(p.category));
-  }, [posts, activeCategory]);
-
   const handleEdit = (id: string) => {
     navigate({ to: "/create-request", search: { edit: id } });
+  };
+
+  const renderPost = (p: FeedPost, keyPrefix = "") => {
+    const isAuthor = !!currentUserId && p.author_id === currentUserId;
+    return (
+      <PostCard
+        key={`${keyPrefix}${p.id}`}
+        expandable
+        expanded={expandedId === `${keyPrefix}${p.id}`}
+        onToggle={() => toggleExpanded(`${keyPrefix}${p.id}`)}
+        canManage={isAuthor}
+        onEdit={handleEdit}
+        onDelete={(id) => setPendingDeleteId(id)}
+        onLike={handleLike}
+        onComment={(id) => navigate({ to: "/request/$id", params: { id } })}
+        post={{
+          id: p.id,
+          author: {
+            name: p.author_name || "Neighbour",
+            avatar: p.author_avatar_url ?? undefined,
+            verified: p.author_verified,
+          },
+          category: p.category,
+          timeAgo: timeAgo(p.created_at),
+          title: p.title,
+          body: p.body,
+          likes: p.likes_count,
+          liked: likedIds.has(p.id),
+          comments: 0,
+          urgency: p.urgency,
+        }}
+      />
+    );
   };
 
   return (
@@ -237,90 +236,41 @@ export default function EnhancedHome() {
         )}
       </header>
 
-      {/* Filters */}
-      <div className="px-4 pt-3 pb-2">
-        <CategoryFilter
-          categories={categories}
-          value={activeCategory}
-          onChange={setActiveCategory}
-        />
-      </div>
-
-      {/* Feed */}
-      <main className="flex flex-1 flex-col gap-3 px-4 pb-28">
+      <main className="flex flex-1 flex-col gap-6 px-4 pt-4 pb-28">
         <SafetyCard title="Stay safe & kind">
           Meet new neighbours in shared spaces and never share keys or payment
           details over chat.
         </SafetyCard>
 
-        {filteredPosts.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center py-10">
-            <div className="flex w-full max-w-sm flex-col items-center rounded-3xl border border-dashed border-border bg-card/60 px-6 py-10 text-center shadow-sm">
-              <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <MessageSquarePlus className="h-7 w-7" />
-              </span>
-              <h2 className="text-base font-semibold text-foreground">
-                Nothing here yet
-              </h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                {isVerified
-                  ? "Be the first to share an update, ask a question, or connect with your neighbours."
-                  : "You can post once your address is verified. In the meantime, browse and message neighbours."}
-              </p>
-              {isVerified ? (
-                <Link
-                  to="/create-request"
-                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create a post
-                </Link>
-              ) : (
-                <Link
-                  to="/verify-address"
-                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Verify your address
-                </Link>
-              )}
-            </div>
+        {/* My posts */}
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="inline-flex items-center gap-2 text-base font-semibold">
+              <FileText className="h-4 w-4 text-primary" /> My posts
+            </h2>
+            {myPosts.length > 5 && (
+              <button
+                type="button"
+                onClick={() => setShowAllMine((v) => !v)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {showAllMine ? "Show less" : "See all"}
+              </button>
+            )}
           </div>
-        ) : (
-          filteredPosts.map((p) => {
-            const isAuthor = !!currentUserId && p.author_id === currentUserId;
-            return (
-              <PostCard
-                key={p.id}
-                expandable
-                expanded={expandedId === p.id}
-                onToggle={toggleExpanded}
-                canManage={isAuthor}
-                onEdit={handleEdit}
-                onDelete={(id) => setPendingDeleteId(id)}
-                onLike={handleLike}
-                post={{
-                  id: p.id,
-                  author: {
-                    name: p.author_name || "Neighbour",
-                    avatar: p.author_avatar_url ?? undefined,
-                    verified: p.author_verified,
-                  },
-                  category: p.category,
-                  timeAgo: timeAgo(p.created_at),
-                  title: p.title,
-                  body: p.body,
-                  likes: p.likes_count,
-                  liked: likedIds.has(p.id),
-                  comments: 0,
-                  urgency: p.urgency,
-                }}
-              />
-            );
-          })
-        )}
+          {myPosts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card/60 p-5 text-center text-sm text-muted-foreground">
+              Your posts will appear here.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {(showAllMine ? myPosts : myPosts.slice(0, 5)).map((p) => renderPost(p, "mine-"))}
+            </div>
+          )}
+        </section>
 
         {/* Liked posts */}
-        <section className="mt-6">
+        <section>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="inline-flex items-center gap-2 text-base font-semibold">
               <Heart className="h-4 w-4 text-primary" /> Liked posts
@@ -341,40 +291,11 @@ export default function EnhancedHome() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {(showAllLiked ? likedPosts : likedPosts.slice(0, 5)).map((p) => {
-                const isAuthor = !!currentUserId && p.author_id === currentUserId;
-                return (
-                  <PostCard
-                    key={`liked-${p.id}`}
-                    canManage={isAuthor}
-                    onEdit={handleEdit}
-                    onDelete={(id) => setPendingDeleteId(id)}
-                    onLike={handleLike}
-                    onComment={(id) => navigate({ to: "/request/$id", params: { id } })}
-                    post={{
-                      id: p.id,
-                      author: {
-                        name: p.author_name || "Neighbour",
-                        avatar: p.author_avatar_url ?? undefined,
-                        verified: p.author_verified,
-                      },
-                      category: p.category,
-                      timeAgo: timeAgo(p.created_at),
-                      title: p.title,
-                      body: p.body,
-                      likes: p.likes_count,
-                      liked: likedIds.has(p.id),
-                      comments: 0,
-                      urgency: p.urgency,
-                    }}
-                  />
-                );
-              })}
+              {(showAllLiked ? likedPosts : likedPosts.slice(0, 5)).map((p) => renderPost(p, "liked-"))}
             </div>
           )}
         </section>
       </main>
-
 
       {isVerified ? (
         <Link
