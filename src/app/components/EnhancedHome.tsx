@@ -110,6 +110,7 @@ export default function EnhancedHome() {
   const locationParts = [profile?.building, profile?.neighbourhood].filter(Boolean) as string[];
   const locationLabel = locationParts.length > 0 ? locationParts.join(" · ") : "Set your location";
   const isVerified = profile?.verification_status === "approved";
+  const isPending = profile?.verification_status === "pending";
 
   const filteredPosts = useMemo(() => {
     if (activeCategory === "all") return posts;
