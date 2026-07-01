@@ -170,6 +170,15 @@ export default function EnhancedHome() {
             <TrustBadge level="new" label="Not verified" />
           )}
         </div>
+
+        {isPending && (
+          <div className="mt-3 flex items-center gap-2 rounded-2xl bg-primary/10 px-3.5 py-2.5 text-primary">
+            <Clock className="h-4 w-4 shrink-0" strokeWidth={2} />
+            <p className="text-[13px] font-medium">
+              Address verification in progress. Posting will be available once approved.
+            </p>
+          </div>
+        )}
       </header>
 
       {/* Filters */}
