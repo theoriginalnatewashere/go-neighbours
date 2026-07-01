@@ -273,6 +273,7 @@ export type Database = {
     }
     Functions: {
       current_user_neighbourhood: { Args: never; Returns: string }
+      current_user_verification_status: { Args: never; Returns: string }
       get_conversation_partners: {
         Args: never
         Returns: {
