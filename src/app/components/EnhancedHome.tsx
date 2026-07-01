@@ -86,6 +86,61 @@ export default function EnhancedHome() {
     staleTime: 0,
   });
 
+  const [showAllLiked, setShowAllLiked] = useState(false);
+
+  const { data: likedIds = new Set<string>() } = useQuery({
+    queryKey: ["my-liked-ids"],
+    queryFn: listMyLikedPostIds,
+    staleTime: 0,
+  });
+
+  const { data: likedPosts = [] } = useQuery<FeedPost[]>({
+    queryKey: ["my-liked-posts"],
+    queryFn: () => listMyLikedPosts(50),
+    staleTime: 0,
+  });
+
+  const toggleLike = useMutation({
+    mutationFn: async (p: { id: string; liked: boolean }) => {
+      if (p.liked) await unlikePost(p.id);
+      else await likePost(p.id);
+    },
+    onMutate: async (p) => {
+      await qc.cancelQueries({ queryKey: ["my-liked-ids"] });
+      const prev = qc.getQueryData<Set<string>>(["my-liked-ids"]) ?? new Set();
+      const next = new Set(prev);
+      if (p.liked) next.delete(p.id);
+      else next.add(p.id);
+      qc.setQueryData(["my-liked-ids"], next);
+      const feed = qc.getQueryData<FeedPost[]>(["cluster-posts"]);
+      if (feed) {
+        qc.setQueryData<FeedPost[]>(
+          ["cluster-posts"],
+          feed.map((x) =>
+            x.id === p.id
+              ? { ...x, likes_count: Math.max(0, x.likes_count + (p.liked ? -1 : 1)) }
+              : x,
+          ),
+        );
+      }
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["my-liked-ids"], ctx.prev);
+      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+      toast.error("Could not update like");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["my-liked-ids"] });
+      qc.invalidateQueries({ queryKey: ["my-liked-posts"] });
+      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+    },
+  });
+
+  const handleLike = (id: string) => {
+    toggleLike.mutate({ id, liked: likedIds.has(id) });
+  };
+
   const deleteMutation = useMutation({
     mutationFn: deletePost,
     onMutate: async (id: string) => {
