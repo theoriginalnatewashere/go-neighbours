@@ -168,6 +168,7 @@ export type Post = {
   title?: string;
   body: string;
   likes: number;
+  liked?: boolean;
   comments: number;
   urgency?: "low" | "medium" | "high";
 };
