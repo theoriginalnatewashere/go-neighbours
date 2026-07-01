@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Users, ShieldCheck, MessageCircle, type LucideIcon } from "lucide-react";
+import logoAsset from "@/assets/go-neighbours-logo.png.asset.json";
+
 
 export const features = [
   {
@@ -66,13 +68,14 @@ export function Onboarding() {
   return (
     <main className="min-h-screen bg-background flex justify-center">
       <div className="w-full max-w-md px-6 pt-12 pb-8 flex flex-col">
-        <div className="flex justify-center mb-8">
-          <div className="relative h-32 w-32 rounded-full bg-secondary flex items-center justify-center">
-            <div className="absolute inset-3 rounded-full bg-primary/15" />
-            <div className="absolute inset-7 rounded-full bg-primary/30" />
-            <Users className="relative h-10 w-10 text-primary" strokeWidth={2.2} />
-          </div>
+        <div className="flex justify-center mb-8 px-4">
+          <img
+            src={logoAsset.url}
+            alt="Go Neighbours logo"
+            className="w-full max-w-[240px] h-auto object-contain"
+          />
         </div>
+
 
         <h1 className="text-3xl font-semibold tracking-tight text-center text-foreground">
           Welcome to Go Neighbours
