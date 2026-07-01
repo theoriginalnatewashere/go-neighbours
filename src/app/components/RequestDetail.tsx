@@ -159,10 +159,15 @@ export default function RequestDetail() {
             <div className="flex items-center gap-3 px-1">
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+                onClick={() => toggleLike.mutate({ liked })}
+                aria-pressed={liked}
+                aria-label={liked ? "Unlike post" : "Like post"}
+                className={`inline-flex items-center gap-1.5 text-sm transition-colors ${
+                  liked ? "text-primary" : "text-muted-foreground hover:text-primary"
+                }`}
               >
-                <Heart className="h-4 w-4" />
-                Save
+                <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
+                {post.likes_count}
               </button>
               <button
                 type="button"
