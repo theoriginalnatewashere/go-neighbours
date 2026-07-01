@@ -305,6 +305,33 @@ export function AddressVerification() {
           Secure &amp; private
         </p>
       </form>
+
+      <Dialog open={showSubmittedModal} onOpenChange={setShowSubmittedModal}>
+        <DialogContent className="max-w-sm rounded-2xl border-border bg-card p-6">
+          <DialogHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <ShieldCheck className="h-7 w-7" strokeWidth={2} />
+            </div>
+            <DialogTitle className="text-center text-lg font-semibold">
+              Verification submitted. Review may take up to 24 hours.
+            </DialogTitle>
+            <DialogDescription className="text-center text-sm text-muted-foreground mt-2">
+              While we review your address, you can browse community posts and complete your profile.
+            </DialogDescription>
+          </DialogHeader>
+          <button
+            type="button"
+            onClick={() => {
+              setShowSubmittedModal(false);
+              navigate({ to: "/home" });
+            }}
+            className="mt-4 w-full h-12 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition shadow-sm"
+          >
+            <Home className="h-5 w-5" strokeWidth={2} />
+            Go to Home
+          </button>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
