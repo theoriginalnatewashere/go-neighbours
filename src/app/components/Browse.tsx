@@ -159,6 +159,7 @@ export default function Browse() {
                 </span>
               )}
               <PostCard
+                onLike={handleLike}
                 post={{
                   id: p.id,
                   author: {
@@ -170,7 +171,8 @@ export default function Browse() {
                   timeAgo: timeAgo(p.created_at),
                   title: p.title,
                   body: p.body,
-                  likes: 0,
+                  likes: p.likes_count,
+                  liked: likedIds.has(p.id),
                   comments: 0,
                   urgency: p.urgency,
                 }}
