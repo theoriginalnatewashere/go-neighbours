@@ -120,7 +120,7 @@ export function AddressVerification() {
     if (!userId || saving) return;
     if (status === "pending") {
       toast.info("Your verification is already under review.");
-      navigate({ to: "/verify-address/submitted" });
+      setShowSubmittedModal(true);
       return;
     }
     if (status === "approved") {
@@ -157,14 +157,13 @@ export function AddressVerification() {
       if (reqError) {
         if (reqError.code === "23505") {
           toast.info("You already have a verification request under review.");
-          navigate({ to: "/verify-address/submitted" });
+          setShowSubmittedModal(true);
           return;
         }
         throw reqError;
       }
 
-      toast.success("Verification request submitted — we'll review it within 24 hours.");
-      navigate({ to: "/verify-address/submitted" });
+      setShowSubmittedModal(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not submit");
     } finally {
