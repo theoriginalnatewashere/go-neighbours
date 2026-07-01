@@ -13,6 +13,7 @@ export type PostRow = {
   author_name: string | null;
   author_avatar_url: string | null;
   author_verified: boolean;
+  likes_count: number;
 };
 
 export type FeedPost = PostRow;
