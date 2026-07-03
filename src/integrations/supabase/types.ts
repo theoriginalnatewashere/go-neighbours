@@ -134,6 +134,7 @@ export type Database = {
           cluster: string
           created_at: string
           id: string
+          image_urls: string[]
           likes_count: number
           title: string
           updated_at: string
@@ -150,6 +151,7 @@ export type Database = {
           cluster: string
           created_at?: string
           id?: string
+          image_urls?: string[]
           likes_count?: number
           title: string
           updated_at?: string
@@ -166,6 +168,7 @@ export type Database = {
           cluster?: string
           created_at?: string
           id?: string
+          image_urls?: string[]
           likes_count?: number
           title?: string
           updated_at?: string
