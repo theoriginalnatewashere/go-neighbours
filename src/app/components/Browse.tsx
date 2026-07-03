@@ -187,10 +187,10 @@ export default function Browse() {
                   liked: likedIds.has(p.id),
                   comments: 0,
                   urgency: p.urgency,
-                  previewImageUrl: p.image_urls[0]
+                  previewImageUrl: Array.isArray(p.image_urls) && p.image_urls[0]
                     ? previewByPath.get(p.image_urls[0])
                     : undefined,
-                  imageCount: p.image_urls.length,
+                  imageCount: Array.isArray(p.image_urls) ? p.image_urls.length : 0,
                 }}
               />
             </div>
