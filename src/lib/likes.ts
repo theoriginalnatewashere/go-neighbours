@@ -39,14 +39,15 @@ export async function listMyLikedPosts(limit = 50): Promise<PostRow[]> {
   const { data, error } = await supabase
     .from("post_likes")
     .select(
-      "created_at, post:posts!inner(id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count)",
+      "created_at, post:posts!inner(id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count, image_urls)",
     )
     .eq("user_id", u.user.id)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  type Row = { post: PostRow | null };
+  type Row = { post: (Omit<PostRow, "image_urls"> & { image_urls: string[] | null }) | null };
   return ((data ?? []) as unknown as Row[])
     .map((r) => r.post)
-    .filter((p): p is PostRow => !!p);
+    .filter((p): p is NonNullable<Row["post"]> => !!p)
+    .map((p) => ({ ...p, image_urls: Array.isArray(p.image_urls) ? p.image_urls : [] }));
 }

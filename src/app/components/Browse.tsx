@@ -50,8 +50,8 @@ export default function Browse() {
   });
 
   const previewPaths = posts
-    .map((p) => p.image_urls[0])
-    .filter((x): x is string => !!x);
+    .map((p) => (Array.isArray(p.image_urls) ? p.image_urls[0] : undefined))
+    .filter((x): x is string => typeof x === "string" && x.length > 0);
   const { data: previewUrls = [] } = useQuery({
     queryKey: ["cluster-preview-images", previewPaths.join("|")],
     queryFn: () => signPostImageUrls(previewPaths),
@@ -187,10 +187,10 @@ export default function Browse() {
                   liked: likedIds.has(p.id),
                   comments: 0,
                   urgency: p.urgency,
-                  previewImageUrl: p.image_urls[0]
+                  previewImageUrl: Array.isArray(p.image_urls) && p.image_urls[0]
                     ? previewByPath.get(p.image_urls[0])
                     : undefined,
-                  imageCount: p.image_urls.length,
+                  imageCount: Array.isArray(p.image_urls) ? p.image_urls.length : 0,
                 }}
               />
             </div>
