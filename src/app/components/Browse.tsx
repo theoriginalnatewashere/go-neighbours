@@ -12,6 +12,7 @@ import {
 import { MobileShell } from "./patterns/shell";
 import { listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
 import { likePost, unlikePost, listMyLikedPostIds } from "@/lib/likes";
+import { signPostImageUrls } from "@/lib/postImages";
 
 const categories: Category[] = [
   { id: "all", label: "All" },
@@ -47,6 +48,17 @@ export default function Browse() {
     queryFn: listClusterPosts,
     staleTime: 0,
   });
+
+  const previewPaths = posts
+    .map((p) => p.image_urls[0])
+    .filter((x): x is string => !!x);
+  const { data: previewUrls = [] } = useQuery({
+    queryKey: ["cluster-preview-images", previewPaths.join("|")],
+    queryFn: () => signPostImageUrls(previewPaths),
+    enabled: previewPaths.length > 0,
+    staleTime: 30 * 60 * 1000,
+  });
+  const previewByPath = new Map(previewPaths.map((p, i) => [p, previewUrls[i]]));
 
   const { data: likedIds = new Set<string>() } = useQuery({
     queryKey: ["my-liked-ids"],
@@ -175,6 +187,10 @@ export default function Browse() {
                   liked: likedIds.has(p.id),
                   comments: 0,
                   urgency: p.urgency,
+                  previewImageUrl: p.image_urls[0]
+                    ? previewByPath.get(p.image_urls[0])
+                    : undefined,
+                  imageCount: p.image_urls.length,
                 }}
               />
             </div>

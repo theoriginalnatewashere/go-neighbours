@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { deletePost, listMyPosts, timeAgo, type FeedPost } from "@/lib/posts";
 import { likePost, unlikePost, listMyLikedPostIds, listMyLikedPosts } from "@/lib/likes";
+import { signPostImageUrls } from "@/lib/postImages";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,6 +88,21 @@ export default function EnhancedHome() {
     queryFn: () => listMyLikedPosts(50),
     staleTime: 0,
   });
+
+  const previewPaths = Array.from(
+    new Set(
+      [...myPosts, ...likedPosts]
+        .map((p) => p.image_urls[0])
+        .filter((x): x is string => !!x),
+    ),
+  );
+  const { data: previewUrls = [] } = useQuery({
+    queryKey: ["home-preview-images", previewPaths.join("|")],
+    queryFn: () => signPostImageUrls(previewPaths),
+    enabled: previewPaths.length > 0,
+    staleTime: 30 * 60 * 1000,
+  });
+  const previewByPath = new Map(previewPaths.map((p, i) => [p, previewUrls[i]]));
 
   const toggleLike = useMutation({
     mutationFn: async (p: { id: string; liked: boolean }) => {
@@ -179,6 +195,10 @@ export default function EnhancedHome() {
           liked: likedIds.has(p.id),
           comments: 0,
           urgency: p.urgency,
+          previewImageUrl: p.image_urls[0]
+            ? previewByPath.get(p.image_urls[0])
+            : undefined,
+          imageCount: p.image_urls.length,
         }}
       />
     );

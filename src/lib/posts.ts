@@ -14,21 +14,22 @@ export type PostRow = {
   author_avatar_url: string | null;
   author_verified: boolean;
   likes_count: number;
+  image_urls: string[];
 };
 
 export type FeedPost = PostRow;
 
+const POST_SELECT =
+  "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count, image_urls";
+
 export async function listClusterPosts(): Promise<FeedPost[]> {
-  // RLS restricts results to posts in the caller's cluster.
   const { data, error } = await supabase
     .from("posts")
-    .select(
-      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count",
-    )
+    .select(POST_SELECT)
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) throw error;
-  return (data ?? []) as PostRow[];
+  return (data ?? []).map(normalizePost);
 }
 
 export async function listMyPosts(limit = 50): Promise<FeedPost[]> {
@@ -36,14 +37,12 @@ export async function listMyPosts(limit = 50): Promise<FeedPost[]> {
   if (!u.user) return [];
   const { data, error } = await supabase
     .from("posts")
-    .select(
-      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count",
-    )
+    .select(POST_SELECT)
     .eq("author_id", u.user.id)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? []) as PostRow[];
+  return (data ?? []).map(normalizePost);
 }
 
 export type NewPostInput = {
@@ -51,6 +50,7 @@ export type NewPostInput = {
   body: string;
   category: string;
   urgency: "low" | "medium" | "high";
+  imageUrls?: string[];
 };
 
 export async function createPost(input: NewPostInput): Promise<PostRow> {
@@ -74,7 +74,6 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
     );
   }
 
-
   const { data, error } = await supabase
     .from("posts")
     .insert({
@@ -88,23 +87,22 @@ export async function createPost(input: NewPostInput): Promise<PostRow> {
       author_name: profile.display_name || profile.full_name || "Neighbour",
       author_avatar_url: profile.avatar_url,
       author_verified: profile.verification_status === "approved",
+      image_urls: input.imageUrls ?? [],
     })
     .select()
     .single();
   if (error) throw error;
-  return data as PostRow;
+  return normalizePost(data);
 }
 
 export async function getPost(id: string): Promise<PostRow | null> {
   const { data, error } = await supabase
     .from("posts")
-    .select(
-      "id, author_id, cluster, building, category, urgency, title, body, created_at, author_name, author_avatar_url, author_verified, likes_count",
-    )
+    .select(POST_SELECT)
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return (data as PostRow | null) ?? null;
+  return data ? normalizePost(data) : null;
 }
 
 export type UpdatePostInput = {
@@ -113,22 +111,26 @@ export type UpdatePostInput = {
   body: string;
   category: string;
   urgency: "low" | "medium" | "high";
+  imageUrls?: string[];
 };
 
 export async function updatePost(input: UpdatePostInput): Promise<PostRow> {
+  const patch = {
+    title: input.title.trim(),
+    body: input.body.trim(),
+    category: input.category,
+    urgency: input.urgency,
+    ...(input.imageUrls !== undefined ? { image_urls: input.imageUrls } : {}),
+  };
+
   const { data, error } = await supabase
     .from("posts")
-    .update({
-      title: input.title.trim(),
-      body: input.body.trim(),
-      category: input.category,
-      urgency: input.urgency,
-    })
+    .update(patch)
     .eq("id", input.id)
     .select()
     .single();
   if (error) throw error;
-  return data as PostRow;
+  return normalizePost(data);
 }
 
 export async function deletePost(id: string): Promise<void> {
@@ -145,4 +147,13 @@ export function timeAgo(iso: string): string {
   if (h < 24) return `${h} h ago`;
   const d = Math.floor(h / 24);
   return `${d} d ago`;
+}
+
+function normalizePost(row: Record<string, unknown>): PostRow {
+  return {
+    ...(row as PostRow),
+    image_urls: Array.isArray((row as { image_urls?: unknown }).image_urls)
+      ? ((row as { image_urls: string[] }).image_urls)
+      : [],
+  };
 }

@@ -171,6 +171,8 @@ export type Post = {
   liked?: boolean;
   comments: number;
   urgency?: "low" | "medium" | "high";
+  previewImageUrl?: string;
+  imageCount?: number;
 };
 
 const urgencyTone: Record<NonNullable<Post["urgency"]>, string> = {
@@ -303,6 +305,22 @@ export function PostCard({
         )}
       </header>
 
+
+      {post.previewImageUrl && (
+        <div className="relative mt-3 overflow-hidden rounded-xl border border-border bg-secondary">
+          <img
+            src={post.previewImageUrl}
+            alt=""
+            className="h-40 w-full object-cover"
+            loading="lazy"
+          />
+          {post.imageCount && post.imageCount > 1 && (
+            <span className="absolute right-2 bottom-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-medium text-white">
+              +{post.imageCount - 1}
+            </span>
+          )}
+        </div>
+      )}
 
       {post.title && (
         <h3 className="mt-3 text-base font-semibold leading-snug">

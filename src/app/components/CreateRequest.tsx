@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createPost, getPost, updatePost } from "@/lib/posts";
+import { uploadPostImages } from "@/lib/postImages";
 import { Route } from "@/routes/_authenticated/create-request";
 import { MobileShell, PrimaryButton, LabeledField, ScreenHeader } from "./patterns/shell";
+import { PostPhotoPicker, type PhotoDraft } from "./PostPhotoPicker";
 
 const categories = ["Help", "Borrow", "Ride", "Errand", "Other"];
 const urgencies = [
@@ -25,6 +27,9 @@ export default function CreateRequest() {
   const [body, setBody] = useState("");
   const [cat, setCat] = useState("Help");
   const [urgency, setUrgency] = useState<"low" | "medium" | "high">("medium");
+  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  const [existingImagePaths, setExistingImagePaths] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ["create-post-profile"],
@@ -62,6 +67,7 @@ export default function CreateRequest() {
       setBody(existing.body);
       setCat(existing.category);
       setUrgency(existing.urgency);
+      setExistingImagePaths(existing.image_urls ?? []);
     }
   }, [existing]);
 
@@ -88,18 +94,32 @@ export default function CreateRequest() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const pending = createMutation.isPending || updateMutation.isPending;
+  const pending = createMutation.isPending || updateMutation.isPending || uploading;
   const canSubmit = title.trim().length > 0 && !pending && (!isEdit || !loadingExisting);
 
   const clusterLabel = profile?.neighbourhood
     ? `${profile.building ? profile.building + " · " : ""}${profile.neighbourhood}`
     : "Set your location to post";
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    let uploadedPaths: string[] = [];
+    if (photos.length > 0) {
+      try {
+        setUploading(true);
+        uploadedPaths = await uploadPostImages(photos.map((p) => p.file));
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not upload photos");
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+    const imageUrls = [...existingImagePaths, ...uploadedPaths];
+
     if (isEdit && editId) {
-      updateMutation.mutate({ id: editId, title, body, category: cat, urgency });
+      updateMutation.mutate({ id: editId, title, body, category: cat, urgency, imageUrls });
     } else {
-      createMutation.mutate({ title, body, category: cat, urgency });
+      createMutation.mutate({ title, body, category: cat, urgency, imageUrls });
     }
   };
 
@@ -185,13 +205,16 @@ export default function CreateRequest() {
           <span className="text-xs text-muted-foreground">Visible only here</span>
         </div>
 
-        <button
-          type="button"
-          disabled
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground"
-        >
-          <Camera className="h-4 w-4" /> Add a photo (coming soon)
-        </button>
+        <PostPhotoPicker
+          photos={photos}
+          onChange={setPhotos}
+          onError={(msg) => toast.error(msg)}
+        />
+        {existingImagePaths.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground">
+            {existingImagePaths.length} existing photo{existingImagePaths.length === 1 ? "" : "s"} kept. Add new ones or leave as is.
+          </div>
+        )}
       </main>
 
       <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">

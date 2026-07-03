@@ -8,6 +8,7 @@ import {
   TrustBadge,
 } from "./patterns";
 import { MobileShell, PrimaryButton, ScreenHeader } from "./patterns/shell";
+import { PostGallery } from "./PostGallery";
 import { getPost, timeAgo, type FeedPost } from "@/lib/posts";
 import { likePost, unlikePost, listMyLikedPostIds } from "@/lib/likes";
 
@@ -136,6 +137,12 @@ export default function RequestDetail() {
               <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/90">
                 {post.body}
               </p>
+
+              {post.image_urls.length > 0 && (
+                <div className="mt-4">
+                  <PostGallery paths={post.image_urls} />
+                </div>
+              )}
 
               <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5">
