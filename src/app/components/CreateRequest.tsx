@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createPost, getPost, updatePost } from "@/lib/posts";
+import { uploadPostImages } from "@/lib/postImages";
 import { Route } from "@/routes/_authenticated/create-request";
 import { MobileShell, PrimaryButton, LabeledField, ScreenHeader } from "./patterns/shell";
+import { PostPhotoPicker, type PhotoDraft } from "./PostPhotoPicker";
 
 const categories = ["Help", "Borrow", "Ride", "Errand", "Other"];
 const urgencies = [
