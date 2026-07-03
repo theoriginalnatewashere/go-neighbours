@@ -94,18 +94,32 @@ export default function CreateRequest() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const pending = createMutation.isPending || updateMutation.isPending;
+  const pending = createMutation.isPending || updateMutation.isPending || uploading;
   const canSubmit = title.trim().length > 0 && !pending && (!isEdit || !loadingExisting);
 
   const clusterLabel = profile?.neighbourhood
     ? `${profile.building ? profile.building + " · " : ""}${profile.neighbourhood}`
     : "Set your location to post";
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    let uploadedPaths: string[] = [];
+    if (photos.length > 0) {
+      try {
+        setUploading(true);
+        uploadedPaths = await uploadPostImages(photos.map((p) => p.file));
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not upload photos");
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+    const imageUrls = [...existingImagePaths, ...uploadedPaths];
+
     if (isEdit && editId) {
-      updateMutation.mutate({ id: editId, title, body, category: cat, urgency });
+      updateMutation.mutate({ id: editId, title, body, category: cat, urgency, imageUrls });
     } else {
-      createMutation.mutate({ title, body, category: cat, urgency });
+      createMutation.mutate({ title, body, category: cat, urgency, imageUrls });
     }
   };
 
