@@ -27,6 +27,9 @@ export default function CreateRequest() {
   const [body, setBody] = useState("");
   const [cat, setCat] = useState("Help");
   const [urgency, setUrgency] = useState<"low" | "medium" | "high">("medium");
+  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  const [existingImagePaths, setExistingImagePaths] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ["create-post-profile"],
