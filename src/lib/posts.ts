@@ -115,13 +115,13 @@ export type UpdatePostInput = {
 };
 
 export async function updatePost(input: UpdatePostInput): Promise<PostRow> {
-  const patch: Record<string, unknown> = {
+  const patch = {
     title: input.title.trim(),
     body: input.body.trim(),
     category: input.category,
     urgency: input.urgency,
+    ...(input.imageUrls !== undefined ? { image_urls: input.imageUrls } : {}),
   };
-  if (input.imageUrls !== undefined) patch.image_urls = input.imageUrls;
 
   const { data, error } = await supabase
     .from("posts")
