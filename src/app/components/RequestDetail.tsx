@@ -138,7 +138,7 @@ export default function RequestDetail() {
                 {post.body}
               </p>
 
-              {post.image_urls.length > 0 && (
+              {Array.isArray(post.image_urls) && post.image_urls.length > 0 && (
                 <div className="mt-4">
                   <PostGallery paths={post.image_urls} />
                 </div>
