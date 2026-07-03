@@ -12,6 +12,7 @@ import {
 import { MobileShell } from "./patterns/shell";
 import { listClusterPosts, timeAgo, type FeedPost } from "@/lib/posts";
 import { likePost, unlikePost, listMyLikedPostIds } from "@/lib/likes";
+import { signPostImageUrls } from "@/lib/postImages";
 
 const categories: Category[] = [
   { id: "all", label: "All" },
