@@ -8,6 +8,7 @@ import {
   TrustBadge,
 } from "./patterns";
 import { MobileShell, PrimaryButton, ScreenHeader } from "./patterns/shell";
+import { PostGallery } from "./PostGallery";
 import { getPost, timeAgo, type FeedPost } from "@/lib/posts";
 import { likePost, unlikePost, listMyLikedPostIds } from "@/lib/likes";
 
