@@ -190,13 +190,16 @@ export default function CreateRequest() {
           <span className="text-xs text-muted-foreground">Visible only here</span>
         </div>
 
-        <button
-          type="button"
-          disabled
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground"
-        >
-          <Camera className="h-4 w-4" /> Add a photo (coming soon)
-        </button>
+        <PostPhotoPicker
+          photos={photos}
+          onChange={setPhotos}
+          onError={(msg) => toast.error(msg)}
+        />
+        {existingImagePaths.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground">
+            {existingImagePaths.length} existing photo{existingImagePaths.length === 1 ? "" : "s"} kept. Add new ones or leave as is.
+          </div>
+        )}
       </main>
 
       <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
