@@ -67,6 +67,7 @@ export default function CreateRequest() {
       setBody(existing.body);
       setCat(existing.category);
       setUrgency(existing.urgency);
+      setExistingImagePaths(existing.image_urls ?? []);
     }
   }, [existing]);
 
