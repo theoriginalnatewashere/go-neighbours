@@ -92,8 +92,8 @@ export default function EnhancedHome() {
   const previewPaths = Array.from(
     new Set(
       [...myPosts, ...likedPosts]
-        .map((p) => p.image_urls[0])
-        .filter((x): x is string => !!x),
+        .map((p) => (Array.isArray(p.image_urls) ? p.image_urls[0] : undefined))
+        .filter((x): x is string => typeof x === "string" && x.length > 0),
     ),
   );
   const { data: previewUrls = [] } = useQuery({
