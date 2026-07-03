@@ -50,8 +50,8 @@ export default function Browse() {
   });
 
   const previewPaths = posts
-    .map((p) => p.image_urls[0])
-    .filter((x): x is string => !!x);
+    .map((p) => (Array.isArray(p.image_urls) ? p.image_urls[0] : undefined))
+    .filter((x): x is string => typeof x === "string" && x.length > 0);
   const { data: previewUrls = [] } = useQuery({
     queryKey: ["cluster-preview-images", previewPaths.join("|")],
     queryFn: () => signPostImageUrls(previewPaths),
