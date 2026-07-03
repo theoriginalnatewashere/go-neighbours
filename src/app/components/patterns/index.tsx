@@ -171,6 +171,8 @@ export type Post = {
   liked?: boolean;
   comments: number;
   urgency?: "low" | "medium" | "high";
+  previewImageUrl?: string;
+  imageCount?: number;
 };
 
 const urgencyTone: Record<NonNullable<Post["urgency"]>, string> = {
