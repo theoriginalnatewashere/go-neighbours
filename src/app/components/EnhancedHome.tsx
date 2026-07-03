@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { deletePost, listMyPosts, timeAgo, type FeedPost } from "@/lib/posts";
 import { likePost, unlikePost, listMyLikedPostIds, listMyLikedPosts } from "@/lib/likes";
+import { signPostImageUrls } from "@/lib/postImages";
 import {
   AlertDialog,
   AlertDialogAction,
