@@ -49,6 +49,17 @@ export default function Browse() {
     staleTime: 0,
   });
 
+  const previewPaths = posts
+    .map((p) => p.image_urls[0])
+    .filter((x): x is string => !!x);
+  const { data: previewUrls = [] } = useQuery({
+    queryKey: ["cluster-preview-images", previewPaths.join("|")],
+    queryFn: () => signPostImageUrls(previewPaths),
+    enabled: previewPaths.length > 0,
+    staleTime: 30 * 60 * 1000,
+  });
+  const previewByPath = new Map(previewPaths.map((p, i) => [p, previewUrls[i]]));
+
   const { data: likedIds = new Set<string>() } = useQuery({
     queryKey: ["my-liked-ids"],
     queryFn: listMyLikedPostIds,
