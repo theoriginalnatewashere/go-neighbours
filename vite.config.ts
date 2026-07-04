@@ -24,12 +24,14 @@ export default defineConfig({
         devOptions: { enabled: false },
         workbox: {
           // Precache only hashed static assets and local icons/manifest/fonts.
+          globDirectory: "dist/client",
           globPatterns: [
             "assets/**/*.{js,css,woff,woff2,ttf,otf}",
             "icons/**/*.png",
             "manifest.webmanifest",
             "favicon.png",
           ],
+          swDest: "dist/client/sw.js",
           // Never cache HTML/navigations — app is online-first.
           navigateFallback: null,
           cleanupOutdatedCaches: true,
