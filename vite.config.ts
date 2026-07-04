@@ -24,21 +24,18 @@ export default defineConfig({
         devOptions: { enabled: false },
         workbox: {
           // Precache only hashed static assets and local icons/manifest/fonts.
-          globDirectory: undefined, // let plugin default to build output
           globPatterns: [
             "assets/**/*.{js,css,woff,woff2,ttf,otf}",
             "icons/**/*.png",
             "manifest.webmanifest",
             "favicon.png",
-            "favicon.ico",
           ],
           // Never cache HTML/navigations — app is online-first.
           navigateFallback: null,
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: false,
-          // Do not add any runtimeCaching: all dynamic requests bypass the SW.
-          runtimeCaching: [],
+          // No runtimeCaching: all dynamic requests (Supabase, APIs, HTML) bypass the SW.
         },
       }),
     ],
