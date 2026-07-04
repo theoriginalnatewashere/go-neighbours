@@ -11,6 +11,7 @@ import {
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { registerPwa } from "@/lib/pwa";
 
 import appCss from "../styles.css?url";
 
@@ -126,6 +127,7 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    registerPwa();
     const { data } = supabase.auth.onAuthStateChange((event: string) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
