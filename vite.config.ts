@@ -20,24 +20,26 @@ export default defineConfig({
         injectRegister: null,
         strategies: "generateSW",
         filename: "sw.js",
-        manifest: false, // manifest is served from /public/manifest.webmanifest
+        manifest: false, // manifest served from /public/manifest.webmanifest
         devOptions: { enabled: false },
+        // Files under public/ that should be precached alongside hashed build assets.
+        includeAssets: [
+          "manifest.webmanifest",
+          "favicon.png",
+          "icons/icon-192.png",
+          "icons/icon-512.png",
+          "icons/icon-512-maskable.png",
+          "icons/apple-touch-icon.png",
+        ],
         workbox: {
-          // Precache only hashed static assets and local icons/manifest/fonts.
-          globDirectory: "dist/client",
-          globPatterns: [
-            "assets/**/*.{js,css,woff,woff2,ttf,otf}",
-            "icons/**/*.png",
-            "manifest.webmanifest",
-            "favicon.png",
-          ],
-          swDest: "dist/client/sw.js",
+          // Precache only hashed static assets (JS/CSS/fonts). includeAssets adds icons/manifest.
+          globPatterns: ["**/*.{js,css,woff,woff2,ttf,otf}"],
           // Never cache HTML/navigations — app is online-first.
           navigateFallback: null,
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: false,
-          // No runtimeCaching: all dynamic requests (Supabase, APIs, HTML) bypass the SW.
+          // No runtimeCaching: all dynamic requests (Supabase, APIs, HTML, images) bypass the SW.
         },
       }),
     ],
