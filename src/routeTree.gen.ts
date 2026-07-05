@@ -23,6 +23,7 @@ import { Route as VerifyAddressSubmittedRouteImport } from './routes/verify-addr
 import { Route as NeighborIdRouteImport } from './routes/neighbor.$id'
 import { Route as LocationScanningRouteImport } from './routes/location.scanning'
 import { Route as LocationClusterRouteImport } from './routes/location.cluster'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedCreateRequestRouteImport } from './routes/_authenticated/create-request'
@@ -100,6 +101,12 @@ const LocationClusterRoute = LocationClusterRouteImport.update({
   path: '/cluster',
   getParentRoute: () => LocationRoute,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/create-request': typeof AuthenticatedCreateRequestRoute
   '/home': typeof AuthenticatedHomeRoute
   '/messages': typeof AuthenticatedMessagesRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
@@ -174,6 +182,7 @@ export interface FileRoutesByTo {
   '/create-request': typeof AuthenticatedCreateRequestRoute
   '/home': typeof AuthenticatedHomeRoute
   '/messages': typeof AuthenticatedMessagesRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
@@ -198,6 +207,7 @@ export interface FileRoutesById {
   '/_authenticated/create-request': typeof AuthenticatedCreateRequestRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/location/cluster': typeof LocationClusterRoute
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/create-request'
     | '/home'
     | '/messages'
+    | '/notifications'
     | '/location/cluster'
     | '/location/scanning'
     | '/neighbor/$id'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/create-request'
     | '/home'
     | '/messages'
+    | '/notifications'
     | '/location/cluster'
     | '/location/scanning'
     | '/neighbor/$id'
@@ -267,6 +279,7 @@ export interface FileRouteTypes {
     | '/_authenticated/create-request'
     | '/_authenticated/home'
     | '/_authenticated/messages'
+    | '/_authenticated/notifications'
     | '/location/cluster'
     | '/location/scanning'
     | '/neighbor/$id'
@@ -390,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocationClusterRouteImport
       parentRoute: typeof LocationRoute
     }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/messages': {
       id: '/_authenticated/messages'
       path: '/messages'
@@ -447,6 +467,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateRequestRoute: typeof AuthenticatedCreateRequestRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedAdminVerificationsRoute: typeof AuthenticatedAdminVerificationsRoute
   AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
   AuthenticatedRequestIdRoute: typeof AuthenticatedRequestIdRoute
@@ -457,6 +478,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateRequestRoute: AuthenticatedCreateRequestRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedAdminVerificationsRoute: AuthenticatedAdminVerificationsRoute,
   AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
   AuthenticatedRequestIdRoute: AuthenticatedRequestIdRoute,

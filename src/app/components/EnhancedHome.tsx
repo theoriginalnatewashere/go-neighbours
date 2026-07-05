@@ -222,14 +222,13 @@ export default function EnhancedHome() {
             >
               <Search className="h-5 w-5" />
             </button>
-            <button
-              type="button"
+            <Link
+              to="/notifications"
               aria-label="Notifications"
               className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-card text-foreground shadow-sm hover:bg-secondary"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
-            </button>
+            </Link>
           </div>
         </div>
 
