@@ -90,9 +90,13 @@ export async function enablePushNotifications(userId: string): Promise<void> {
   let subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
     try {
+      const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: key.buffer.slice(
+          key.byteOffset,
+          key.byteOffset + key.byteLength,
+        ) as ArrayBuffer,
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Couldn't subscribe to push.";
