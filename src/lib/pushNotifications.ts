@@ -48,15 +48,37 @@ function bufToB64Url(buf: ArrayBuffer | null): string {
 async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    return await navigator.serviceWorker.ready;
+    // Race ready against a timeout — in dev/preview the SW may never activate.
+    return await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<ServiceWorkerRegistration | null>((resolve) =>
+        setTimeout(() => resolve(null), 4000),
+      ),
+    ]);
   } catch {
     return null;
   }
 }
 
+/**
+ * Enable push on this device. Must be invoked from a user gesture so the
+ * browser accepts Notification.requestPermission() and pushManager.subscribe().
+ * Throws with a user-facing message on any failure so the caller can toast it
+ * and revert the toggle.
+ */
 export async function enablePushNotifications(userId: string): Promise<void> {
   const support = checkPushSupport();
   if (!support.supported) throw new Error(support.reason);
+
+  // Ask for permission FIRST, still inside the user gesture chain.
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    throw new Error(
+      permission === "denied"
+        ? "Notifications are blocked. Enable them for this site in your browser or device settings."
+        : "Notification permission wasn't granted.",
+    );
+  }
 
   const registration = await getReadyRegistration();
   if (!registration) {
@@ -65,24 +87,29 @@ export async function enablePushNotifications(userId: string): Promise<void> {
     );
   }
 
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    throw new Error(
-      "Notifications are blocked. Enable them for this site in your browser or device settings.",
-    );
-  }
-
   let subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
-    });
+    try {
+      const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: key.buffer.slice(
+          key.byteOffset,
+          key.byteOffset + key.byteLength,
+        ) as ArrayBuffer,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Couldn't subscribe to push.";
+      throw new Error(`Push subscription failed: ${msg}`);
+    }
   }
 
   const endpoint = subscription.endpoint;
   const p256dh = bufToB64Url(subscription.getKey("p256dh"));
   const auth = bufToB64Url(subscription.getKey("auth"));
+  if (!endpoint || !p256dh || !auth) {
+    throw new Error("Push subscription is missing required keys.");
+  }
 
   const { error } = await supabase.from("push_subscriptions").upsert(
     {
@@ -94,37 +121,43 @@ export async function enablePushNotifications(userId: string): Promise<void> {
     },
     { onConflict: "endpoint" },
   );
-  if (error) throw error;
+  if (error) throw new Error(`Couldn't save subscription: ${error.message}`);
 }
 
+/**
+ * Unsubscribes this device's push subscription and removes it from the DB.
+ * Safe to call even if no subscription exists.
+ */
 export async function disablePushNotificationsThisDevice(userId: string): Promise<void> {
   const registration = await getReadyRegistration();
-  if (registration) {
-    const subscription = await registration.pushManager.getSubscription();
-    if (subscription) {
-      const endpoint = subscription.endpoint;
-      try {
-        await subscription.unsubscribe();
-      } catch {
-        // ignore
-      }
-      await supabase
-        .from("push_subscriptions")
-        .delete()
-        .eq("user_id", userId)
-        .eq("endpoint", endpoint);
-    }
+  if (!registration) return;
+  const subscription = await registration.pushManager.getSubscription();
+  if (!subscription) return;
+  const endpoint = subscription.endpoint;
+  try {
+    await subscription.unsubscribe();
+  } catch {
+    // ignore — best effort
   }
+  await supabase
+    .from("push_subscriptions")
+    .delete()
+    .eq("user_id", userId)
+    .eq("endpoint", endpoint);
 }
 
 export async function getNotificationPreference(
   userId: string,
 ): Promise<boolean> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("notification_preferences")
     .select("messages_about_posts")
     .eq("user_id", userId)
     .maybeSingle();
+  if (error) {
+    console.warn("getNotificationPreference failed", error);
+    return false;
+  }
   return !!data?.messages_about_posts;
 }
 
@@ -136,7 +169,7 @@ export async function setNotificationPreference(
     { user_id: userId, messages_about_posts: enabled },
     { onConflict: "user_id" },
   );
-  if (error) throw error;
+  if (error) throw new Error(`Couldn't save preference: ${error.message}`);
 }
 
 /**
