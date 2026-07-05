@@ -83,22 +83,32 @@ export default function Notifications() {
       if (next) {
         if (!support.supported) {
           toast.error(support.reason);
+          setEnabled(false);
           return;
         }
+        // Enable push first (permission + subscription + DB row). If any
+        // step fails, throw and revert. Only persist the preference once
+        // the subscription is successfully stored.
         await enablePushNotifications(userId);
         await setNotificationPreference(userId, true);
         setEnabled(true);
         toast.success("Notifications enabled on this device.");
       } else {
         await setNotificationPreference(userId, false);
-        await disablePushNotificationsThisDevice(userId);
+        // Best-effort teardown — do not fail the toggle if this errors.
+        try {
+          await disablePushNotificationsThisDevice(userId);
+        } catch (err) {
+          console.warn("disablePushNotificationsThisDevice failed", err);
+        }
         setEnabled(false);
         toast.success("Notifications turned off.");
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Couldn't update notifications.";
       toast.error(message);
-      setEnabled(false);
+      // Revert to the last known-good state.
+      setEnabled((prev) => (next ? false : prev));
     } finally {
       setSaving(false);
     }
