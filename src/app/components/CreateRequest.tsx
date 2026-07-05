@@ -10,7 +10,7 @@ import { Route } from "@/routes/_authenticated/create-request";
 import { MobileShell, PrimaryButton, LabeledField, ScreenHeader } from "./patterns/shell";
 import { PostPhotoPicker, type PhotoDraft } from "./PostPhotoPicker";
 
-const categories = ["Help", "Borrow", "Ride", "Errand", "Other"];
+const categories = ["Helps", "Offers", "Events", "Lost & Found", "Share", "Other"];
 const urgencies = [
   { id: "low" as const, label: "Whenever" },
   { id: "medium" as const, label: "Today" },
