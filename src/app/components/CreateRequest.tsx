@@ -25,7 +25,7 @@ export default function CreateRequest() {
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [cat, setCat] = useState("Help");
+  const [cat, setCat] = useState("Helps");
   const [urgency, setUrgency] = useState<"low" | "medium" | "high">("medium");
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [existingImagePaths, setExistingImagePaths] = useState<string[]>([]);
