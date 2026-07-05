@@ -15,6 +15,7 @@ import {
   sendMessage,
   type ChatMessage,
 } from "@/lib/messaging";
+import { triggerMessagePush } from "@/lib/pushNotifications";
 
 export default function Chat() {
   const { id: otherUserId } = useParams({ from: "/_authenticated/chat/$id" });
@@ -141,6 +142,7 @@ export default function Chat() {
         (prev = []) => (prev.some((x) => x.id === msg.id) ? prev : [...prev, msg]),
       );
       queryClient.invalidateQueries({ queryKey: ["conversations", userId] });
+      triggerMessagePush(conversationId);
     } catch (err) {
       console.error(err);
       toast.error("Couldn't send message");
