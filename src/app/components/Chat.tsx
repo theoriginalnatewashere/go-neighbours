@@ -15,6 +15,7 @@ import {
   sendMessage,
   type ChatMessage,
 } from "@/lib/messaging";
+import { triggerMessagePush } from "@/lib/pushNotifications";
 
 export default function Chat() {
   const { id: otherUserId } = useParams({ from: "/_authenticated/chat/$id" });
