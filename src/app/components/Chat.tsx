@@ -142,6 +142,7 @@ export default function Chat() {
         (prev = []) => (prev.some((x) => x.id === msg.id) ? prev : [...prev, msg]),
       );
       queryClient.invalidateQueries({ queryKey: ["conversations", userId] });
+      triggerMessagePush(conversationId);
     } catch (err) {
       console.error(err);
       toast.error("Couldn't send message");
