@@ -16,11 +16,12 @@ import { signPostImageUrls } from "@/lib/postImages";
 
 const categories: Category[] = [
   { id: "all", label: "All" },
-  { id: "help", label: "Help" },
-  { id: "offer", label: "Offers" },
+  { id: "helps", label: "Helps" },
+  { id: "offers", label: "Offers" },
   { id: "events", label: "Events" },
-  { id: "lost", label: "Lost & found" },
+  { id: "lost", label: "Lost & Found" },
   { id: "share", label: "Share" },
+  { id: "other", label: "Other" },
 ];
 
 const urgencyTone: Record<string, string> = {
@@ -29,12 +30,15 @@ const urgencyTone: Record<string, string> = {
   low: "bg-secondary text-secondary-foreground",
 };
 
+// Include legacy stored values so posts created before the category cleanup
+// still surface under the closest current filter.
 const categoryMap: Record<string, string[]> = {
-  help: ["Help", "Borrow", "Ride", "Errand"],
-  offer: ["Offer", "Offers"],
-  events: ["Event", "Events"],
-  lost: ["Lost", "Lost & found"],
-  share: ["Share", "Other"],
+  helps: ["Helps", "Help", "Borrow", "Ride", "Errand"],
+  offers: ["Offers", "Offer"],
+  events: ["Events", "Event"],
+  lost: ["Lost & Found", "Lost & found", "Lost"],
+  share: ["Share"],
+  other: ["Other"],
 };
 
 export default function Browse() {
