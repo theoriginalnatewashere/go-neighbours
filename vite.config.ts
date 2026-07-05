@@ -39,6 +39,8 @@ export default defineConfig({
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: false,
+          // Web Push handler (push + notificationclick listeners).
+          importScripts: ["/push-sw.js"],
           // No runtimeCaching: all dynamic requests (Supabase, APIs, HTML, images) bypass the SW.
         },
       }),
