@@ -10,14 +10,33 @@ export type PushSupport =
   | { supported: true }
   | { supported: false; reason: string };
 
+// TEMP: verbose diagnostics for the iOS Home Screen push enrolment audit.
+// Remove once the flow is confirmed working end-to-end on iOS.
+const DEBUG = true;
+function log(step: string, data?: unknown) {
+  if (!DEBUG) return;
+  // eslint-disable-next-line no-console
+  console.info(`[push] ${step}`, data ?? "");
+}
+
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.matchMedia?.("(display-mode: standalone)").matches) return true;
+  } catch {
+    // ignore
+  }
+  const nav = window.navigator as Navigator & { standalone?: boolean };
+  return nav.standalone === true;
+}
+
 function isInEditorPreviewIframe(): boolean {
   if (typeof window === "undefined") return false;
-  // Only treat as editor preview when actually embedded in an iframe.
-  // The published hostname (e.g. go-neighbours.lovable.app) must NOT trigger this.
+  // Installed home-screen apps are never iframed — never block them.
+  if (isStandalone()) return false;
   try {
     return window.self !== window.top;
   } catch {
-    // Cross-origin frame access throws — that itself means we're iframed.
     return true;
   }
 }
@@ -64,84 +83,112 @@ function bufToB64Url(buf: ArrayBuffer | null): string {
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function diag(): Record<string, unknown> {
-  if (typeof window === "undefined") return { env: "server" };
-  let iframed = false;
-  try {
-    iframed = window.self !== window.top;
-  } catch {
-    iframed = true;
-  }
-  return {
-    url: window.location.href,
-    hostname: window.location.hostname,
-    iframed,
-    serviceWorker: "serviceWorker" in navigator,
-    pushManager: "PushManager" in window,
-    notification: "Notification" in window,
-    permission: "Notification" in window ? Notification.permission : "n/a",
-    prod: import.meta.env.PROD,
-  };
-}
-
-async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null> {
+async function waitForActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return null;
-  try {
-    // If no registration exists yet (e.g. SW hasn't been installed on this
-    // origin), try to register /sw.js explicitly so push can enrol on the
-    // very first visit without requiring a full reload.
-    const existing = await navigator.serviceWorker.getRegistration();
-    if (!existing) {
-      try {
-        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      } catch (err) {
-        console.warn("[push] sw.js registration failed", err);
-      }
+
+  // Try to find (or create) a registration under our scope.
+  let reg =
+    (await navigator.serviceWorker.getRegistration("/")) ??
+    (await navigator.serviceWorker.getRegistration());
+  log("sw.getRegistration initial", {
+    found: !!reg,
+    scope: reg?.scope,
+    hasActive: !!reg?.active,
+  });
+
+  if (!reg) {
+    try {
+      reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      log("sw.register done", { scope: reg.scope });
+    } catch (err) {
+      log("sw.register failed", err);
+      return null;
     }
-    return await Promise.race([
+  }
+
+  // Wait for it to become active (up to 30s — iOS can be slow on first install).
+  const start = Date.now();
+  const deadline = start + 30000;
+  while (Date.now() < deadline) {
+    if (reg.active) return reg;
+    const ready = await Promise.race([
       navigator.serviceWorker.ready,
       new Promise<ServiceWorkerRegistration | null>((resolve) =>
-        setTimeout(() => resolve(null), 10000),
+        setTimeout(() => resolve(null), 1500),
       ),
     ]);
-  } catch (err) {
-    console.warn("[push] getReadyRegistration failed", err);
-    return null;
+    if (ready?.active) {
+      log("sw.ready active", { scope: ready.scope });
+      return ready;
+    }
+    // Re-fetch registration in case it changed
+    reg = (await navigator.serviceWorker.getRegistration("/")) ?? reg;
   }
+  log("sw.wait timed out", { elapsedMs: Date.now() - start, hasActive: !!reg.active });
+  return reg.active ? reg : null;
 }
 
 /**
- * Enable push on this device. Must be invoked from a user gesture so the
- * browser accepts Notification.requestPermission() and pushManager.subscribe().
- * Throws with a user-facing message on any failure so the caller can toast it
- * and revert the toggle.
+ * Enable push on this device. Must be invoked from a user gesture.
+ * Throws with a step-specific, user-facing message so the caller can toast it.
  */
 export async function enablePushNotifications(userId: string): Promise<void> {
-  if (!import.meta.env.PROD) console.info("[push] enable start", diag());
+  log("enable:start", {
+    href: typeof window !== "undefined" ? window.location.href : null,
+    standalone: isStandalone(),
+    hasNotification: typeof window !== "undefined" && "Notification" in window,
+    hasSW: typeof navigator !== "undefined" && "serviceWorker" in navigator,
+    hasPushManager: typeof window !== "undefined" && "PushManager" in window,
+    permission:
+      typeof window !== "undefined" && "Notification" in window ? Notification.permission : "n/a",
+    vapidKeyPresent: !!VAPID_PUBLIC_KEY && VAPID_PUBLIC_KEY.length > 20,
+  });
 
   const support = checkPushSupport();
   if (!support.supported) throw new Error(support.reason);
 
-  // Ask for permission FIRST, still inside the user gesture chain.
-  const permission = await Notification.requestPermission();
-  if (!import.meta.env.PROD) console.info("[push] permission", permission);
+  // 1) Permission — only ask if not already granted (avoid redundant prompt on iOS).
+  let permission = Notification.permission;
+  if (permission === "default") {
+    try {
+      permission = await Notification.requestPermission();
+    } catch (err) {
+      log("permission.request threw", err);
+      throw new Error("Could not request notification permission on this device.");
+    }
+  }
+  log("permission.result", permission);
   if (permission !== "granted") {
     throw new Error(
       permission === "denied"
-        ? "Notifications are blocked. Enable them for this site in your browser or device settings."
+        ? "Notifications are blocked. Enable them for Go Neighbours in your device settings."
         : "Notification permission wasn't granted.",
     );
   }
 
-  const registration = await getReadyRegistration();
-  if (!registration) {
+  // 2) Service worker
+  const registration = await waitForActiveRegistration();
+  log("sw.final", {
+    hasReg: !!registration,
+    scope: registration?.scope,
+    activeState: registration?.active?.state,
+    controller: navigator.serviceWorker.controller?.scriptURL ?? null,
+  });
+  if (!registration || !registration.active) {
     throw new Error(
-      "Couldn't activate the notifications service worker on this device. Reload the app and try again.",
+      "Notifications are allowed, but the app could not activate its background service. Close and reopen the app, then try again.",
     );
   }
 
+  // 3) Push subscription — reuse existing if present.
+  let subscription: PushSubscription | null = null;
+  try {
+    subscription = await registration.pushManager.getSubscription();
+    log("push.getSubscription", { existing: !!subscription });
+  } catch (err) {
+    log("push.getSubscription threw", err);
+  }
 
-  let subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
     try {
       const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
@@ -152,9 +199,14 @@ export async function enablePushNotifications(userId: string): Promise<void> {
           key.byteOffset + key.byteLength,
         ) as ArrayBuffer,
       });
+      log("push.subscribe ok", { endpoint: subscription.endpoint.slice(0, 40) + "…" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Couldn't subscribe to push.";
-      throw new Error(`Push subscription failed: ${msg}`);
+      const name = err instanceof Error ? err.name : "Error";
+      const msg = err instanceof Error ? err.message : String(err);
+      log("push.subscribe failed", { name, msg });
+      throw new Error(
+        `Notifications are allowed, but this device could not create a push subscription (${name}).`,
+      );
     }
   }
 
@@ -165,6 +217,7 @@ export async function enablePushNotifications(userId: string): Promise<void> {
     throw new Error("Push subscription is missing required keys.");
   }
 
+  // 4) Persist to Supabase.
   const { error } = await supabase.from("push_subscriptions").upsert(
     {
       user_id: userId,
@@ -175,15 +228,23 @@ export async function enablePushNotifications(userId: string): Promise<void> {
     },
     { onConflict: "endpoint" },
   );
-  if (error) throw new Error(`Couldn't save subscription: ${error.message}`);
+  if (error) {
+    log("supabase.upsert push_subscriptions failed", error);
+    throw new Error(
+      `Notifications are enabled, but the subscription could not be saved (${error.message}).`,
+    );
+  }
+  log("supabase.upsert push_subscriptions ok");
 }
 
 /**
  * Unsubscribes this device's push subscription and removes it from the DB.
- * Safe to call even if no subscription exists.
  */
 export async function disablePushNotificationsThisDevice(userId: string): Promise<void> {
-  const registration = await getReadyRegistration();
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+  const registration =
+    (await navigator.serviceWorker.getRegistration("/")) ??
+    (await navigator.serviceWorker.getRegistration());
   if (!registration) return;
   const subscription = await registration.pushManager.getSubscription();
   if (!subscription) return;
@@ -191,7 +252,7 @@ export async function disablePushNotificationsThisDevice(userId: string): Promis
   try {
     await subscription.unsubscribe();
   } catch {
-    // ignore — best effort
+    // ignore
   }
   await supabase
     .from("push_subscriptions")
@@ -200,16 +261,14 @@ export async function disablePushNotificationsThisDevice(userId: string): Promis
     .eq("endpoint", endpoint);
 }
 
-export async function getNotificationPreference(
-  userId: string,
-): Promise<boolean> {
+export async function getNotificationPreference(userId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("notification_preferences")
     .select("messages_about_posts")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) {
-    console.warn("getNotificationPreference failed", error);
+    log("supabase.select notification_preferences failed", error);
     return false;
   }
   return !!data?.messages_about_posts;
@@ -223,7 +282,10 @@ export async function setNotificationPreference(
     { user_id: userId, messages_about_posts: enabled },
     { onConflict: "user_id" },
   );
-  if (error) throw new Error(`Couldn't save preference: ${error.message}`);
+  if (error) {
+    log("supabase.upsert notification_preferences failed", error);
+    throw new Error(`Couldn't save preference: ${error.message}`);
+  }
 }
 
 /**
@@ -236,6 +298,7 @@ export function triggerMessagePush(conversationId: string): void {
       body: { conversationId },
     });
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.warn("triggerMessagePush failed", err);
   }
 }
