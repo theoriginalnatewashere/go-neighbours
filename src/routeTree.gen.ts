@@ -35,6 +35,7 @@ import { Route as AuthenticatedRequestIdRouteImport } from './routes/_authentica
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 import { Route as AuthenticatedAdminVerificationsRouteImport } from './routes/_authenticated/admin.verifications'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const VerifyAddressRoute = VerifyAddressRouteImport.update({
   id: '/verify-address',
@@ -171,6 +172,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/verifications'
     | '/chat/$id'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/verifications'
     | '/chat/$id'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/verifications'
     | '/_authenticated/chat/$id'
@@ -355,6 +367,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   NeighborIdRoute: typeof NeighborIdRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
@@ -542,6 +555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -612,6 +632,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   NeighborIdRoute: NeighborIdRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport

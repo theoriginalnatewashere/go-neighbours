@@ -17,11 +17,13 @@ export default defineTool({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
+    const userId = ctx.getUserId();
+    if (!userId) return { content: [{ type: "text", text: "No user id" }], isError: true };
     const supabase = supabaseForUser(ctx);
     const { data, error } = await supabase
       .from("posts")
       .select(SELECT)
-      .eq("author_id", ctx.getUserId())
+      .eq("author_id", userId)
       .order("created_at", { ascending: false })
       .limit(limit ?? 20);
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };

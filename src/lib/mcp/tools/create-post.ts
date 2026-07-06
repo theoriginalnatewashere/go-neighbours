@@ -20,8 +20,9 @@ export default defineTool({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
-    const supabase = supabaseForUser(ctx);
     const userId = ctx.getUserId();
+    if (!userId) return { content: [{ type: "text", text: "No user id" }], isError: true };
+    const supabase = supabaseForUser(ctx);
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
       .select("neighbourhood, building, display_name, full_name, avatar_url, verification_status")

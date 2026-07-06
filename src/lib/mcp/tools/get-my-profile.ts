@@ -12,13 +12,15 @@ export default defineTool({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
+    const userId = ctx.getUserId();
+    if (!userId) return { content: [{ type: "text", text: "No user id" }], isError: true };
     const supabase = supabaseForUser(ctx);
     const { data, error } = await supabase
       .from("profiles")
       .select(
         "id, display_name, full_name, neighbourhood, building, verification_status, avatar_url",
       )
-      .eq("id", ctx.getUserId())
+      .eq("id", userId)
       .maybeSingle();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
