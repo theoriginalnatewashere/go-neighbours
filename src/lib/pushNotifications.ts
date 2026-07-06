@@ -10,8 +10,27 @@ export type PushSupport =
   | { supported: true }
   | { supported: false; reason: string };
 
+function isInEditorPreviewIframe(): boolean {
+  if (typeof window === "undefined") return false;
+  // Only treat as editor preview when actually embedded in an iframe.
+  // The published hostname (e.g. go-neighbours.lovable.app) must NOT trigger this.
+  try {
+    return window.self !== window.top;
+  } catch {
+    // Cross-origin frame access throws — that itself means we're iframed.
+    return true;
+  }
+}
+
 export function checkPushSupport(): PushSupport {
   if (typeof window === "undefined") return { supported: false, reason: "Not in a browser" };
+  if (isInEditorPreviewIframe()) {
+    return {
+      supported: false,
+      reason:
+        "Notifications only work in the installed or published app, not in the editor preview.",
+    };
+  }
   if (!("serviceWorker" in navigator)) {
     return { supported: false, reason: "This browser doesn't support service workers." };
   }
