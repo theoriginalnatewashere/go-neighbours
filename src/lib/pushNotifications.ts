@@ -10,8 +10,27 @@ export type PushSupport =
   | { supported: true }
   | { supported: false; reason: string };
 
+function isInEditorPreviewIframe(): boolean {
+  if (typeof window === "undefined") return false;
+  // Only treat as editor preview when actually embedded in an iframe.
+  // The published hostname (e.g. go-neighbours.lovable.app) must NOT trigger this.
+  try {
+    return window.self !== window.top;
+  } catch {
+    // Cross-origin frame access throws — that itself means we're iframed.
+    return true;
+  }
+}
+
 export function checkPushSupport(): PushSupport {
   if (typeof window === "undefined") return { supported: false, reason: "Not in a browser" };
+  if (isInEditorPreviewIframe()) {
+    return {
+      supported: false,
+      reason:
+        "Notifications only work in the installed or published app, not in the editor preview.",
+    };
+  }
   if (!("serviceWorker" in navigator)) {
     return { supported: false, reason: "This browser doesn't support service workers." };
   }
@@ -45,17 +64,48 @@ function bufToB64Url(buf: ArrayBuffer | null): string {
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null> {
-  if (!("serviceWorker" in navigator)) return null;
+function diag(): Record<string, unknown> {
+  if (typeof window === "undefined") return { env: "server" };
+  let iframed = false;
   try {
-    // Race ready against a timeout — in dev/preview the SW may never activate.
+    iframed = window.self !== window.top;
+  } catch {
+    iframed = true;
+  }
+  return {
+    url: window.location.href,
+    hostname: window.location.hostname,
+    iframed,
+    serviceWorker: "serviceWorker" in navigator,
+    pushManager: "PushManager" in window,
+    notification: "Notification" in window,
+    permission: "Notification" in window ? Notification.permission : "n/a",
+    prod: import.meta.env.PROD,
+  };
+}
+
+async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return null;
+  try {
+    // If no registration exists yet (e.g. SW hasn't been installed on this
+    // origin), try to register /sw.js explicitly so push can enrol on the
+    // very first visit without requiring a full reload.
+    const existing = await navigator.serviceWorker.getRegistration();
+    if (!existing) {
+      try {
+        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      } catch (err) {
+        console.warn("[push] sw.js registration failed", err);
+      }
+    }
     return await Promise.race([
       navigator.serviceWorker.ready,
       new Promise<ServiceWorkerRegistration | null>((resolve) =>
-        setTimeout(() => resolve(null), 4000),
+        setTimeout(() => resolve(null), 10000),
       ),
     ]);
-  } catch {
+  } catch (err) {
+    console.warn("[push] getReadyRegistration failed", err);
     return null;
   }
 }
@@ -67,11 +117,14 @@ async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null>
  * and revert the toggle.
  */
 export async function enablePushNotifications(userId: string): Promise<void> {
+  if (!import.meta.env.PROD) console.info("[push] enable start", diag());
+
   const support = checkPushSupport();
   if (!support.supported) throw new Error(support.reason);
 
   // Ask for permission FIRST, still inside the user gesture chain.
   const permission = await Notification.requestPermission();
+  if (!import.meta.env.PROD) console.info("[push] permission", permission);
   if (permission !== "granted") {
     throw new Error(
       permission === "denied"
@@ -83,9 +136,10 @@ export async function enablePushNotifications(userId: string): Promise<void> {
   const registration = await getReadyRegistration();
   if (!registration) {
     throw new Error(
-      "Notifications only work in the installed or published app, not in the editor preview.",
+      "Couldn't activate the notifications service worker on this device. Reload the app and try again.",
     );
   }
+
 
   let subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
