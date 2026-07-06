@@ -10,9 +10,7 @@ export type PushSupport =
   | { supported: true }
   | { supported: false; reason: string };
 
-// TEMP: verbose diagnostics for the iOS Home Screen push enrolment audit.
-// Remove once the flow is confirmed working end-to-end on iOS.
-const DEBUG = true;
+const DEBUG = false;
 function log(step: string, data?: unknown) {
   if (!DEBUG) return;
   // eslint-disable-next-line no-console
