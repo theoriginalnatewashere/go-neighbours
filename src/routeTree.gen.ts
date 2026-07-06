@@ -14,6 +14,7 @@ import { Route as SuccessRouteImport } from './routes/success'
 import { Route as ProfileSetupRouteImport } from './routes/profile-setup'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PatternsRouteImport } from './routes/patterns'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LocationRouteImport } from './routes/location'
 import { Route as CreateOfferRouteImport } from './routes/create-offer'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -28,9 +29,13 @@ import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedCreateRequestRouteImport } from './routes/_authenticated/create-request'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedRequestIdRouteImport } from './routes/_authenticated/request.$id'
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 import { Route as AuthenticatedAdminVerificationsRouteImport } from './routes/_authenticated/admin.verifications'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const VerifyAddressRoute = VerifyAddressRouteImport.update({
   id: '/verify-address',
@@ -55,6 +60,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const PatternsRoute = PatternsRouteImport.update({
   id: '/patterns',
   path: '/patterns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocationRoute = LocationRouteImport.update({
@@ -128,6 +138,18 @@ const AuthenticatedBrowseRoute = AuthenticatedBrowseRouteImport.update({
   path: '/browse',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedRequestIdRoute = AuthenticatedRequestIdRouteImport.update({
   id: '/request/$id',
   path: '/request/$id',
@@ -144,17 +166,31 @@ const AuthenticatedAdminVerificationsRoute =
     path: '/admin/verifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/create-offer': typeof CreateOfferRoute
   '/location': typeof LocationRouteWithChildren
+  '/mcp': typeof McpRoute
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/browse': typeof AuthenticatedBrowseRoute
   '/create-request': typeof AuthenticatedCreateRequestRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -164,6 +200,8 @@ export interface FileRoutesByFullPath {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/request/$id': typeof AuthenticatedRequestIdRoute
@@ -173,11 +211,14 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/create-offer': typeof CreateOfferRoute
   '/location': typeof LocationRouteWithChildren
+  '/mcp': typeof McpRoute
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/browse': typeof AuthenticatedBrowseRoute
   '/create-request': typeof AuthenticatedCreateRequestRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -187,6 +228,8 @@ export interface FileRoutesByTo {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/request/$id': typeof AuthenticatedRequestIdRoute
@@ -198,11 +241,14 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/create-offer': typeof CreateOfferRoute
   '/location': typeof LocationRouteWithChildren
+  '/mcp': typeof McpRoute
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/create-request': typeof AuthenticatedCreateRequestRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
@@ -212,6 +258,8 @@ export interface FileRoutesById {
   '/location/scanning': typeof LocationScanningRoute
   '/neighbor/$id': typeof NeighborIdRoute
   '/verify-address/submitted': typeof VerifyAddressSubmittedRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/request/$id': typeof AuthenticatedRequestIdRoute
@@ -223,11 +271,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/create-offer'
     | '/location'
+    | '/mcp'
     | '/patterns'
     | '/profile'
     | '/profile-setup'
     | '/success'
     | '/verify-address'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/browse'
     | '/create-request'
     | '/home'
@@ -237,6 +288,8 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/verifications'
     | '/chat/$id'
     | '/request/$id'
@@ -246,11 +299,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/create-offer'
     | '/location'
+    | '/mcp'
     | '/patterns'
     | '/profile'
     | '/profile-setup'
     | '/success'
     | '/verify-address'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/browse'
     | '/create-request'
     | '/home'
@@ -260,6 +316,8 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/verifications'
     | '/chat/$id'
     | '/request/$id'
@@ -270,11 +328,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/create-offer'
     | '/location'
+    | '/mcp'
     | '/patterns'
     | '/profile'
     | '/profile-setup'
     | '/success'
     | '/verify-address'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/browse'
     | '/_authenticated/create-request'
     | '/_authenticated/home'
@@ -284,6 +345,8 @@ export interface FileRouteTypes {
     | '/location/scanning'
     | '/neighbor/$id'
     | '/verify-address/submitted'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/verifications'
     | '/_authenticated/chat/$id'
     | '/_authenticated/request/$id'
@@ -295,12 +358,17 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CreateOfferRoute: typeof CreateOfferRoute
   LocationRoute: typeof LocationRouteWithChildren
+  McpRoute: typeof McpRoute
   PatternsRoute: typeof PatternsRoute
   ProfileRoute: typeof ProfileRoute
   ProfileSetupRoute: typeof ProfileSetupRoute
   SuccessRoute: typeof SuccessRoute
   VerifyAddressRoute: typeof VerifyAddressRouteWithChildren
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   NeighborIdRoute: typeof NeighborIdRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -338,6 +406,13 @@ declare module '@tanstack/react-router' {
       path: '/patterns'
       fullPath: '/patterns'
       preLoaderRoute: typeof PatternsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/location': {
@@ -438,6 +513,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrowseRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/request/$id': {
       id: '/_authenticated/request/$id'
       path: '/request/$id'
@@ -458,6 +547,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/verifications'
       preLoaderRoute: typeof AuthenticatedAdminVerificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -519,13 +622,29 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CreateOfferRoute: CreateOfferRoute,
   LocationRoute: LocationRouteWithChildren,
+  McpRoute: McpRoute,
   PatternsRoute: PatternsRoute,
   ProfileRoute: ProfileRoute,
   ProfileSetupRoute: ProfileSetupRoute,
   SuccessRoute: SuccessRoute,
   VerifyAddressRoute: VerifyAddressRouteWithChildren,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   NeighborIdRoute: NeighborIdRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
