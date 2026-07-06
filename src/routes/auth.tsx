@@ -3,13 +3,19 @@ import { AuthSignUp } from "@/app/components/AuthSignUp";
 import { supabase } from "@/integrations/supabase/client";
 import { getRedirectForUser } from "@/lib/profileRouting";
 
+function safeNext(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  return v.startsWith("/") && !v.startsWith("//") ? v : undefined;
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  beforeLoad: async () => {
+  validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s.next) }),
+  beforeLoad: async ({ search }) => {
     const { data } = await supabase.auth.getUser();
     if (data.user) {
-      const dest = await getRedirectForUser(data.user.id);
-      throw redirect({ to: dest });
+      const dest = search.next ?? (await getRedirectForUser(data.user.id));
+      throw redirect({ href: dest });
     }
   },
   head: () => ({
