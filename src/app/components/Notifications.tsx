@@ -147,8 +147,7 @@ export default function Notifications() {
           </div>
           {enabled && (
             <p className="mt-3 text-xs text-muted-foreground">
-              You can turn this off any time. Notifications only work in the installed
-              or published app, not in the editor preview.
+              You can turn this off any time.
             </p>
           )}
         </section>
