@@ -43,6 +43,12 @@ export default defineConfig({
           skipWaiting: false,
           // Web Push handler (push + notificationclick listeners).
           importScripts: ["/push-sw.js"],
+          // TanStack Start emits client assets under `<outDir>/client/**`, so
+          // Workbox's precache manifest URLs are prefixed with `client/`.
+          // In production those resolve to `/client/assets/...` which 404s
+          // (real assets are served from `/assets/...`), causing SW install
+          // to fail and never activate. Strip the prefix.
+          modifyURLPrefix: { "client/": "" },
           // No runtimeCaching: all dynamic requests (Supabase, APIs, HTML, images) bypass the SW.
         },
       }),
