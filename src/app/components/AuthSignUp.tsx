@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -19,6 +19,8 @@ function GoogleIcon({ className }: { className?: string }) {
 
 export function AuthSignUp() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/auth" }) as { next?: string };
+  const next = search.next;
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,15 +33,19 @@ export function AuthSignUp() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const emailRedirectTo = next
+          ? `${window.location.origin}${next}`
+          : `${window.location.origin}/location`;
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/location` },
+          options: { emailRedirectTo },
         });
         if (error) throw error;
         if (data.session && data.user) {
           toast.success("Account created. Let's set up your profile.");
-          navigate({ to: "/location" });
+          if (next) window.location.href = next;
+          else navigate({ to: "/location" });
         } else {
           toast.success("Check your email to confirm your account.");
           setMode("login");
@@ -48,8 +54,12 @@ export function AuthSignUp() {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in");
-        const dest = data.user ? await getRedirectForUser(data.user.id) : "/home";
-        navigate({ to: dest });
+        if (next) {
+          window.location.href = next;
+        } else {
+          const dest = data.user ? await getRedirectForUser(data.user.id) : "/home";
+          navigate({ to: dest });
+        }
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
@@ -62,18 +72,23 @@ export function AuthSignUp() {
     if (googleLoading) return;
     setGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
+      const redirect_uri = next
+        ? `${window.location.origin}${next}`
+        : window.location.origin;
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri });
       if (result.error) {
         toast.error(result.error.message ?? "Google sign-in failed");
         setGoogleLoading(false);
         return;
       }
       if (result.redirected) return;
-      const { data: userData } = await supabase.auth.getUser();
-      const dest = userData.user ? await getRedirectForUser(userData.user.id) : "/location";
-      navigate({ to: dest });
+      if (next) {
+        window.location.href = next;
+      } else {
+        const { data: userData } = await supabase.auth.getUser();
+        const dest = userData.user ? await getRedirectForUser(userData.user.id) : "/location";
+        navigate({ to: dest });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
