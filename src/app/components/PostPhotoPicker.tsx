@@ -98,7 +98,6 @@ export function PostPhotoPicker({
         type="file"
         accept={ALLOWED_IMAGE_TYPES.join(",")}
         multiple
-        capture="environment"
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
