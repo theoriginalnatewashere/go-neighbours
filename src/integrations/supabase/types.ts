@@ -48,18 +48,29 @@ export type Database = {
           created_at: string
           id: string
           last_message_at: string
+          post_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           last_message_at?: string
+          post_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           last_message_at?: string
+          post_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -374,7 +385,7 @@ export type Database = {
         }[]
       }
       get_or_create_direct_conversation: {
-        Args: { _other: string }
+        Args: { _other: string; _post?: string }
         Returns: string
       }
       has_role: {
