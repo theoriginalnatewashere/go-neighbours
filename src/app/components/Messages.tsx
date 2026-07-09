@@ -40,6 +40,14 @@ export default function Messages() {
     preview: c.lastMessage,
     timeAgo: formatTimeAgo(c.lastMessageAt),
     unread: c.unreadCount || undefined,
+    postContext: c.postContext
+      ? {
+          available: c.postContext.available,
+          categoryLabel: c.postContext.categoryLabel,
+          title: c.postContext.title,
+          imageUrl: c.postContext.imageUrl,
+        }
+      : null,
   }));
 
   const filtered = threads.filter(
