@@ -33,17 +33,28 @@ export default function Messages() {
     staleTime: 0,
   });
 
-  const threads: MessageThread[] = (conversations ?? []).map((c) => ({
-    id: c.partnerId,
-    name: c.partnerName,
-    avatar: c.partnerAvatar ?? undefined,
-    preview: c.lastMessage,
-    timeAgo: formatTimeAgo(c.lastMessageAt),
-    unread: c.unreadCount || undefined,
+  const items = (conversations ?? []).map((c) => ({
+    source: c,
+    thread: {
+      id: c.partnerId,
+      name: c.partnerName,
+      avatar: c.partnerAvatar ?? undefined,
+      preview: c.lastMessage,
+      timeAgo: formatTimeAgo(c.lastMessageAt),
+      unread: c.unreadCount || undefined,
+      postContext: c.postContext
+        ? {
+            available: c.postContext.available,
+            categoryLabel: c.postContext.categoryLabel,
+            title: c.postContext.title,
+            imageUrl: c.postContext.imageUrl,
+          }
+        : null,
+    } satisfies MessageThread,
   }));
 
-  const filtered = threads.filter(
-    (t) =>
+  const filtered = items.filter(
+    ({ thread: t }) =>
       !query ||
       t.name.toLowerCase().includes(query.toLowerCase()) ||
       t.preview.toLowerCase().includes(query.toLowerCase()),
@@ -71,13 +82,22 @@ export default function Messages() {
           </p>
         )}
         {!isLoading &&
-          filtered.map((t) => (
+          filtered.map(({ source, thread }) => (
             <MessageThreadItem
-              key={t.id || t.preview}
-              thread={t}
+              key={source.conversationId}
+              thread={thread}
               onClick={(id) => {
                 if (!id) return;
-                navigate({ to: "/chat/$id", params: { id } });
+                navigate({
+                  to: "/chat/$id",
+                  params: { id },
+                  search: {
+                    conv: source.conversationId,
+                    ...(source.postContext?.available
+                      ? { post: source.postContext.postId }
+                      : {}),
+                  },
+                });
               }}
             />
           ))}

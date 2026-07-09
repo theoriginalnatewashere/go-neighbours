@@ -472,6 +472,13 @@ export function FloatingActionButton({
 }
 
 /* ---------------- MessageThreadItem ---------------- */
+export type MessageThreadPostContext = {
+  available: boolean;
+  categoryLabel: string;
+  title: string;
+  imageUrl?: string | null;
+};
+
 export type MessageThread = {
   id: string;
   name: string;
@@ -480,6 +487,7 @@ export type MessageThread = {
   preview: string;
   timeAgo: string;
   unread?: number;
+  postContext?: MessageThreadPostContext | null;
 };
 
 export function MessageThreadItem({
@@ -489,6 +497,13 @@ export function MessageThreadItem({
   thread: MessageThread;
   onClick?: (id: string) => void;
 }) {
+  const ctx = thread.postContext;
+  const contextLine = ctx
+    ? ctx.available
+      ? `${ctx.categoryLabel}: ${ctx.title}`
+      : "Original post removed"
+    : null;
+
   return (
     <button
       type="button"
@@ -507,6 +522,16 @@ export function MessageThreadItem({
             {thread.timeAgo}
           </span>
         </div>
+        {contextLine && (
+          <p
+            className={cn(
+              "truncate text-[11px]",
+              ctx?.available ? "text-primary/80" : "italic text-muted-foreground",
+            )}
+          >
+            {contextLine}
+          </p>
+        )}
         <p
           className={cn(
             "truncate text-sm",
@@ -518,6 +543,16 @@ export function MessageThreadItem({
           {thread.preview}
         </p>
       </div>
+      {ctx?.available && ctx.imageUrl ? (
+        <img
+          src={ctx.imageUrl}
+          alt=""
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+          className="h-11 w-11 shrink-0 rounded-lg object-cover opacity-90"
+        />
+      ) : null}
       {thread.unread ? (
         <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
           {thread.unread}
