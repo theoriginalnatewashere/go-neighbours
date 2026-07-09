@@ -79,16 +79,28 @@ export default function Messages() {
           </p>
         )}
         {!isLoading &&
-          filtered.map((t) => (
-            <MessageThreadItem
-              key={t.id || t.preview}
-              thread={t}
-              onClick={(id) => {
-                if (!id) return;
-                navigate({ to: "/chat/$id", params: { id } });
-              }}
-            />
-          ))}
+          filtered.map((t, idx) => {
+            const source = (conversations ?? [])[idx];
+            return (
+              <MessageThreadItem
+                key={source?.conversationId ?? t.id || t.preview}
+                thread={t}
+                onClick={(id) => {
+                  if (!id || !source) return;
+                  navigate({
+                    to: "/chat/$id",
+                    params: { id },
+                    search: {
+                      conv: source.conversationId,
+                      ...(source.postContext?.available
+                        ? { post: source.postContext.postId }
+                        : {}),
+                    },
+                  });
+                }}
+              />
+            );
+          })}
         {!isLoading && filtered.length === 0 && (
           <div className="px-4 py-12 text-center">
             <p className="text-sm font-medium text-foreground">No conversations yet</p>
