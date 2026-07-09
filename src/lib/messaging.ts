@@ -1,5 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type PostContext = {
+  postId: string;
+  available: boolean;
+  category: string | null;
+  categoryLabel: string;
+  title: string;
+  imageUrl: string | null;
+};
+
 export type ConversationSummary = {
   conversationId: string;
   partnerId: string;
@@ -8,6 +17,7 @@ export type ConversationSummary = {
   lastMessage: string;
   lastMessageAt: string;
   unreadCount: number;
+  postContext: PostContext | null;
 };
 
 export type ChatMessage = {
@@ -18,24 +28,142 @@ export type ChatMessage = {
   createdAt: string;
 };
 
-export async function getOrCreateConversation(otherUserId: string): Promise<string> {
+export async function getOrCreateConversation(
+  otherUserId: string,
+  postId?: string | null,
+): Promise<string> {
   const { data, error } = await supabase.rpc("get_or_create_direct_conversation", {
     _other: otherUserId,
+    ...(postId ? { _post: postId } : {}),
   });
   if (error) throw error;
   return data as string;
 }
 
+export function normalizeCategoryLabel(category: string | null | undefined): string {
+  if (!category) return "Post";
+  const raw = category.toLowerCase().replace(/[\s_-]+/g, " ").trim();
+  if (raw === "help" || raw === "helps" || raw === "request") return "Help";
+  if (raw === "offer" || raw === "offers") return "Offer";
+  if (raw === "event" || raw === "events") return "Event";
+  if (raw === "lost found" || raw === "lost and found" || raw === "lostfound")
+    return "Lost & Found";
+  if (raw === "share" || raw === "shares") return "Share";
+  if (raw === "other") return "Other";
+  return category.charAt(0).toUpperCase() + category.slice(1);
+}
+
+function excerpt(text: string, max = 55): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  return clean.slice(0, max - 1).trimEnd() + "…";
+}
+
+export async function fetchPostContext(postId: string): Promise<PostContext> {
+  const { data } = await supabase
+    .from("posts")
+    .select("id, category, title, body, image_urls")
+    .eq("id", postId)
+    .maybeSingle();
+
+  if (!data) {
+    return {
+      postId,
+      available: false,
+      category: null,
+      categoryLabel: "",
+      title: "Original post removed",
+      imageUrl: null,
+    };
+  }
+
+  const images = Array.isArray(data.image_urls) ? (data.image_urls as string[]) : [];
+  const firstImage = images.find((u) => typeof u === "string" && u.length > 0) ?? null;
+  const displayTitle = data.title?.trim()
+    ? excerpt(data.title, 60)
+    : excerpt(data.body ?? "", 55);
+
+  return {
+    postId,
+    available: true,
+    category: data.category,
+    categoryLabel: normalizeCategoryLabel(data.category),
+    title: displayTitle || "View post",
+    imageUrl: firstImage,
+  };
+}
+
+async function fetchPostContextsMap(
+  postIds: string[],
+): Promise<Map<string, PostContext>> {
+  const map = new Map<string, PostContext>();
+  if (postIds.length === 0) return map;
+  const { data } = await supabase
+    .from("posts")
+    .select("id, category, title, body, image_urls")
+    .in("id", postIds);
+
+  const foundIds = new Set<string>();
+  for (const row of data ?? []) {
+    foundIds.add(row.id);
+    const images = Array.isArray(row.image_urls) ? (row.image_urls as string[]) : [];
+    const firstImage = images.find((u) => typeof u === "string" && u.length > 0) ?? null;
+    const displayTitle = row.title?.trim()
+      ? excerpt(row.title, 60)
+      : excerpt(row.body ?? "", 55);
+    map.set(row.id, {
+      postId: row.id,
+      available: true,
+      category: row.category,
+      categoryLabel: normalizeCategoryLabel(row.category),
+      title: displayTitle || "View post",
+      imageUrl: firstImage,
+    });
+  }
+  // Fill in unavailable posts (deleted or hidden by RLS)
+  for (const id of postIds) {
+    if (!foundIds.has(id)) {
+      map.set(id, {
+        postId: id,
+        available: false,
+        category: null,
+        categoryLabel: "",
+        title: "Original post removed",
+        imageUrl: null,
+      });
+    }
+  }
+  return map;
+}
+
+export async function getConversationPostContext(
+  conversationId: string,
+): Promise<PostContext | null> {
+  const { data } = await supabase
+    .from("conversations")
+    .select("post_id")
+    .eq("id", conversationId)
+    .maybeSingle();
+  if (!data?.post_id) return null;
+  return fetchPostContext(data.post_id);
+}
+
 export async function fetchConversations(userId: string): Promise<ConversationSummary[]> {
-  // Get my participant rows (incl last_read_at) and conversation last_message_at
   const { data: myParts, error: mpErr } = await supabase
     .from("conversation_participants")
-    .select("conversation_id, last_read_at, conversations(last_message_at)")
+    .select("conversation_id, last_read_at, conversations(last_message_at, post_id)")
     .eq("user_id", userId);
   if (mpErr) throw mpErr;
   if (!myParts || myParts.length === 0) return [];
 
   const conversationIds = myParts.map((p) => p.conversation_id);
+  const postIdByConv = new Map<string, string | null>();
+  for (const p of myParts) {
+    postIdByConv.set(
+      p.conversation_id,
+      (p.conversations as { post_id: string | null } | null)?.post_id ?? null,
+    );
+  }
 
   // Partners
   const { data: partners, error: pErr } = await supabase.rpc("get_conversation_partners");
@@ -81,9 +209,18 @@ export async function fetchConversations(userId: string): Promise<ConversationSu
     }
   }
 
+  // Batch post contexts
+  const postIds = Array.from(
+    new Set(
+      Array.from(postIdByConv.values()).filter((v): v is string => typeof v === "string"),
+    ),
+  );
+  const postCtxMap = await fetchPostContextsMap(postIds);
+
   const summaries: ConversationSummary[] = conversationIds.map((cid) => {
     const partner = partnerMap.get(cid);
     const last = lastByConv.get(cid);
+    const postId = postIdByConv.get(cid) ?? null;
     return {
       conversationId: cid,
       partnerId: partner?.userId ?? "",
@@ -92,9 +229,11 @@ export async function fetchConversations(userId: string): Promise<ConversationSu
       lastMessage: last?.body ?? "Say hello 👋",
       lastMessageAt:
         last?.createdAt ??
-        (myParts.find((p) => p.conversation_id === cid)?.conversations?.last_message_at ??
+        ((myParts.find((p) => p.conversation_id === cid)?.conversations as { last_message_at?: string } | null)
+          ?.last_message_at ??
           new Date().toISOString()),
       unreadCount: unreadByConv.get(cid) ?? 0,
+      postContext: postId ? postCtxMap.get(postId) ?? null : null,
     };
   });
 
