@@ -33,25 +33,28 @@ export default function Messages() {
     staleTime: 0,
   });
 
-  const threads: MessageThread[] = (conversations ?? []).map((c) => ({
-    id: c.partnerId,
-    name: c.partnerName,
-    avatar: c.partnerAvatar ?? undefined,
-    preview: c.lastMessage,
-    timeAgo: formatTimeAgo(c.lastMessageAt),
-    unread: c.unreadCount || undefined,
-    postContext: c.postContext
-      ? {
-          available: c.postContext.available,
-          categoryLabel: c.postContext.categoryLabel,
-          title: c.postContext.title,
-          imageUrl: c.postContext.imageUrl,
-        }
-      : null,
+  const items = (conversations ?? []).map((c) => ({
+    source: c,
+    thread: {
+      id: c.partnerId,
+      name: c.partnerName,
+      avatar: c.partnerAvatar ?? undefined,
+      preview: c.lastMessage,
+      timeAgo: formatTimeAgo(c.lastMessageAt),
+      unread: c.unreadCount || undefined,
+      postContext: c.postContext
+        ? {
+            available: c.postContext.available,
+            categoryLabel: c.postContext.categoryLabel,
+            title: c.postContext.title,
+            imageUrl: c.postContext.imageUrl,
+          }
+        : null,
+    } satisfies MessageThread,
   }));
 
-  const filtered = threads.filter(
-    (t) =>
+  const filtered = items.filter(
+    ({ thread: t }) =>
       !query ||
       t.name.toLowerCase().includes(query.toLowerCase()) ||
       t.preview.toLowerCase().includes(query.toLowerCase()),
@@ -79,28 +82,25 @@ export default function Messages() {
           </p>
         )}
         {!isLoading &&
-          filtered.map((t, idx) => {
-            const source = (conversations ?? [])[idx];
-            return (
-              <MessageThreadItem
-                key={source?.conversationId ?? t.id || t.preview}
-                thread={t}
-                onClick={(id) => {
-                  if (!id || !source) return;
-                  navigate({
-                    to: "/chat/$id",
-                    params: { id },
-                    search: {
-                      conv: source.conversationId,
-                      ...(source.postContext?.available
-                        ? { post: source.postContext.postId }
-                        : {}),
-                    },
-                  });
-                }}
-              />
-            );
-          })}
+          filtered.map(({ source, thread }) => (
+            <MessageThreadItem
+              key={source.conversationId}
+              thread={thread}
+              onClick={(id) => {
+                if (!id) return;
+                navigate({
+                  to: "/chat/$id",
+                  params: { id },
+                  search: {
+                    conv: source.conversationId,
+                    ...(source.postContext?.available
+                      ? { post: source.postContext.postId }
+                      : {}),
+                  },
+                });
+              }}
+            />
+          ))}
         {!isLoading && filtered.length === 0 && (
           <div className="px-4 py-12 text-center">
             <p className="text-sm font-medium text-foreground">No conversations yet</p>
