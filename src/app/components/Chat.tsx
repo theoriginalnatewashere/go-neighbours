@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image as ImageIcon, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -9,19 +9,24 @@ import { MobileShell, ScreenHeader } from "./patterns/shell";
 import { cn } from "@/lib/utils";
 import {
   fetchMessages,
+  fetchPostContext,
   formatClock,
+  getConversationPostContext,
   getOrCreateConversation,
   markConversationRead,
   sendMessage,
   type ChatMessage,
+  type PostContext,
 } from "@/lib/messaging";
 import { triggerMessagePush } from "@/lib/pushNotifications";
 
 export default function Chat() {
   const { id: otherUserId } = useParams({ from: "/_authenticated/chat/$id" });
+  const search = useSearch({ from: "/_authenticated/chat/$id" });
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [postContext, setPostContext] = useState<PostContext | null>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [resolving, setResolving] = useState(true);
@@ -40,16 +45,31 @@ export default function Chat() {
       }
       setUserId(u.user.id);
       try {
-        const convId = await getOrCreateConversation(otherUserId);
+        let convId: string;
+        if (search.conv) {
+          convId = search.conv;
+        } else {
+          convId = await getOrCreateConversation(otherUserId, search.post ?? null);
+        }
         if (!mounted) return;
         setConversationId(convId);
-        // Fetch partner display name via the security-definer RPC
+
+        // Post context: prefer explicit search.post, else look up conversation.post_id
+        if (search.post) {
+          const ctx = await fetchPostContext(search.post);
+          if (mounted) setPostContext(ctx);
+        } else {
+          const ctx = await getConversationPostContext(convId);
+          if (mounted) setPostContext(ctx);
+        }
+
+        // Partner name
         const { data: partners } = await supabase.rpc("get_conversation_partners");
         const partner = (partners ?? []).find(
           (p: { conversation_id: string; user_id: string; display_name: string | null; full_name: string | null }) =>
             p.conversation_id === convId,
         );
-        if (partner) {
+        if (partner && mounted) {
           setPartnerName(partner.full_name || partner.display_name || "Neighbour");
         }
       } catch (err) {
@@ -62,7 +82,7 @@ export default function Chat() {
     return () => {
       mounted = false;
     };
-  }, [otherUserId]);
+  }, [otherUserId, search.conv, search.post]);
 
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", conversationId],
@@ -164,6 +184,54 @@ export default function Chat() {
         title={partnerName}
         subtitle="Direct message"
       />
+
+      {postContext && (
+        <div className="px-4 pt-2">
+          <div
+            className={cn(
+              "flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2 shadow-sm",
+              !postContext.available && "opacity-70",
+            )}
+          >
+            {postContext.available && postContext.imageUrl ? (
+              <img
+                src={postContext.imageUrl}
+                alt=""
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+                className="h-11 w-11 shrink-0 rounded-lg object-cover"
+              />
+            ) : (
+              <div className="h-11 w-11 shrink-0 rounded-lg bg-secondary" aria-hidden />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Conversation about
+              </p>
+              {postContext.available ? (
+                <p className="truncate text-sm font-medium text-foreground">
+                  <span className="text-primary">{postContext.categoryLabel}:</span>{" "}
+                  {postContext.title}
+                </p>
+              ) : (
+                <p className="truncate text-sm italic text-muted-foreground">
+                  Original post removed
+                </p>
+              )}
+            </div>
+            {postContext.available && (
+              <Link
+                to="/request/$id"
+                params={{ id: postContext.postId }}
+                className="shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/15"
+              >
+                View post
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       <main
         ref={scrollRef}
