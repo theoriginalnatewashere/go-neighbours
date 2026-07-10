@@ -1,7 +1,9 @@
-import { Link, useParams } from "@tanstack/react-router";
-import { Clock, Flag, Heart, MapPin, MessageCircle, Share2 } from "lucide-react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Clock, Flag, Heart, MapPin, MessageCircle, MoreHorizontal, Pencil, Share2, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   NeighborAvatar,
   SafetyCard,
@@ -9,12 +11,30 @@ import {
 } from "./patterns";
 import { MobileShell, PrimaryButton, ScreenHeader } from "./patterns/shell";
 import { PostGallery } from "./PostGallery";
-import { getPost, timeAgo, type FeedPost } from "@/lib/posts";
+import { deletePost, getPost, timeAgo, type FeedPost } from "@/lib/posts";
 import { likePost, unlikePost, listMyLikedPostIds } from "@/lib/likes";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function RequestDetail() {
   const { id } = useParams({ from: "/_authenticated/request/$id" });
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // RLS returns null when the post is in another cluster, so cross-cluster
   // URL access is blocked at the database, not in the UI.
@@ -24,12 +44,50 @@ export default function RequestDetail() {
     staleTime: 0,
   });
 
+  const { data: currentUserId } = useQuery({
+    queryKey: ["current-user-id"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user?.id ?? null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isAuthor = !!currentUserId && !!post && post.author_id === currentUserId;
+
   const { data: likedIds = new Set<string>() } = useQuery({
     queryKey: ["my-liked-ids"],
     queryFn: listMyLikedPostIds,
     staleTime: 0,
   });
   const liked = likedIds.has(id);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deletePost(id),
+    onSuccess: () => {
+      qc.setQueryData<FeedPost[]>(
+        ["my-posts"],
+        (prev) => (prev ?? []).filter((p) => p.id !== id),
+      );
+      qc.setQueryData<FeedPost[]>(
+        ["cluster-posts"],
+        (prev) => (prev ?? []).filter((p) => p.id !== id),
+      );
+      qc.setQueryData<FeedPost[]>(
+        ["my-liked-posts"],
+        (prev) => (prev ?? []).filter((p) => p.id !== id),
+      );
+      qc.invalidateQueries({ queryKey: ["my-posts"] });
+      qc.invalidateQueries({ queryKey: ["cluster-posts"] });
+      qc.invalidateQueries({ queryKey: ["my-liked-posts"] });
+      toast.success("Post deleted successfully.");
+      navigate({ to: "/home" });
+    },
+    onError: (e: Error) => {
+      toast.error(e.message || "Could not delete post");
+      setConfirmDelete(false);
+    },
+  });
 
   const toggleLike = useMutation({
     mutationFn: async (p: { liked: boolean }) => {
@@ -75,21 +133,50 @@ export default function RequestDetail() {
     },
   });
 
+  const rightSlot = isAuthor ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Post options"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-sm hover:bg-secondary"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            navigate({ to: "/create-request", search: { edit: id } });
+          }}
+        >
+          <Pencil className="mr-2 h-4 w-4" /> Edit post
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onSelect={(e) => {
+            e.preventDefault();
+            setConfirmDelete(true);
+          }}
+        >
+          <Trash2 className="mr-2 h-4 w-4" /> Delete post
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : (
+    <button
+      type="button"
+      aria-label="Share"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-sm hover:bg-secondary"
+    >
+      <Share2 className="h-4 w-4" />
+    </button>
+  );
+
   return (
     <MobileShell>
-      <ScreenHeader
-        title="Request"
-        backTo="/browse"
-        rightSlot={
-          <button
-            type="button"
-            aria-label="Share"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-sm hover:bg-secondary"
-          >
-            <Share2 className="h-4 w-4" />
-          </button>
-        }
-      />
+      <ScreenHeader title="Request" backTo="/browse" rightSlot={rightSlot} />
 
       <main className="flex-1 space-y-4 px-4 pb-32">
         {isLoading ? (
@@ -188,13 +275,43 @@ export default function RequestDetail() {
         )}
       </main>
 
-      {post && post.author_id && (
+      {post && post.author_id && !isAuthor && (
         <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
           <Link to="/chat/$id" params={{ id: post.author_id }} search={{ post: post.id }}>
             <PrimaryButton icon={MessageCircle}>I can help</PrimaryButton>
           </Link>
         </div>
       )}
+
+      <AlertDialog
+        open={confirmDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setConfirmDelete(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteMutation.mutate();
+              }}
+            >
+              {deleteMutation.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileShell>
   );
 }
