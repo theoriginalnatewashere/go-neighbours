@@ -170,39 +170,42 @@ export default function EnhancedHome() {
   const renderPost = (p: FeedPost, keyPrefix = "") => {
     const isAuthor = !!currentUserId && p.author_id === currentUserId;
     return (
-      <PostCard
+      <Link
         key={`${keyPrefix}${p.id}`}
-        expandable
-        expanded={expandedId === `${keyPrefix}${p.id}`}
-        onToggle={() => toggleExpanded(`${keyPrefix}${p.id}`)}
-        canManage={isAuthor}
-        onEdit={handleEdit}
-        onDelete={(id) => setPendingDeleteId(id)}
-        onLike={handleLike}
-        onComment={(id) => navigate({ to: "/request/$id", params: { id } })}
-        post={{
-          id: p.id,
-          author: {
-            name: p.author_name || "Neighbour",
-            avatar: p.author_avatar_url ?? undefined,
-            verified: p.author_verified,
-          },
-          category: p.category,
-          timeAgo: timeAgo(p.created_at),
-          title: p.title,
-          body: p.body,
-          likes: p.likes_count,
-          liked: likedIds.has(p.id),
-          comments: 0,
-          urgency: p.urgency,
-          previewImageUrl: Array.isArray(p.image_urls) && p.image_urls[0]
-            ? previewByPath.get(p.image_urls[0])
-            : undefined,
-          imageCount: Array.isArray(p.image_urls) ? p.image_urls.length : 0,
-        }}
-      />
+        to="/request/$id"
+        params={{ id: p.id }}
+        className="block"
+      >
+        <PostCard
+          canManage={isAuthor}
+          onEdit={handleEdit}
+          onDelete={(id) => setPendingDeleteId(id)}
+          onLike={handleLike}
+          post={{
+            id: p.id,
+            author: {
+              name: p.author_name || "Neighbour",
+              avatar: p.author_avatar_url ?? undefined,
+              verified: p.author_verified,
+            },
+            category: p.category,
+            timeAgo: timeAgo(p.created_at),
+            title: p.title,
+            body: p.body,
+            likes: p.likes_count,
+            liked: likedIds.has(p.id),
+            comments: 0,
+            urgency: p.urgency,
+            previewImageUrl: Array.isArray(p.image_urls) && p.image_urls[0]
+              ? previewByPath.get(p.image_urls[0])
+              : undefined,
+            imageCount: Array.isArray(p.image_urls) ? p.image_urls.length : 0,
+          }}
+        />
+      </Link>
     );
   };
+
 
   return (
     <div className="relative mx-auto flex min-h-screen w-[393px] max-w-full flex-col bg-background">
