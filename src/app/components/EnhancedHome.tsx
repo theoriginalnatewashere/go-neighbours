@@ -40,12 +40,10 @@ function firstName(full: string | null | undefined, display: string | null | und
 export default function EnhancedHome() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [showAllMine, setShowAllMine] = useState(false);
   const [showAllLiked, setShowAllLiked] = useState(false);
-  const toggleExpanded = (id: string) =>
-    setExpandedId((cur) => (cur === id ? null : id));
+
 
   const { data: currentUserId } = useQuery({
     queryKey: ["current-user-id"],
