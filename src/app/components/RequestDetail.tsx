@@ -55,6 +55,23 @@ export default function RequestDetail() {
 
   const isAuthor = !!currentUserId && !!post && post.author_id === currentUserId;
 
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["is-admin", currentUserId],
+    enabled: !!currentUserId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", currentUserId!)
+        .eq("role", "admin")
+        .maybeSingle();
+      return !!data;
+    },
+  });
+
+  const canManage = isAuthor || isAdmin;
+
   const { data: likedIds = new Set<string>() } = useQuery({
     queryKey: ["my-liked-ids"],
     queryFn: listMyLikedPostIds,
