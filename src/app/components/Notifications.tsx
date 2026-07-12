@@ -168,8 +168,61 @@ export default function Notifications() {
         </section>
 
         {isAdmin && <AdminAnnouncementCard />}
+
+        <AnnouncementsList userId={userId} />
       </main>
     </MobileShell>
+  );
+}
+
+type AnnouncementRow = {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+};
+
+function AnnouncementsList({ userId }: { userId: string | null }) {
+  const { data: announcements } = useQuery({
+    queryKey: ["cluster-announcements", userId],
+    enabled: !!userId,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("announcements")
+        .select("id, title, message, created_at")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return (data ?? []) as AnnouncementRow[];
+    },
+  });
+
+  if (!announcements || announcements.length === 0) return null;
+
+  return (
+    <section className="rounded-2xl bg-card p-4 shadow-sm">
+      <div className="flex items-center gap-2">
+        <Megaphone className="h-4 w-4 text-primary" />
+        <h3 className="text-base font-semibold text-foreground">Cluster announcements</h3>
+      </div>
+      <ul className="mt-3 space-y-3">
+        {announcements.map((a) => (
+          <li key={a.id} className="rounded-lg border border-border/60 bg-background/40 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-semibold text-foreground">{a.title}</p>
+              <time className="shrink-0 text-xs text-muted-foreground">
+                {new Date(a.created_at).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </time>
+            </div>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{a.message}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
