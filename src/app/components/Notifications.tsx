@@ -178,7 +178,7 @@ function AdminAnnouncementCard() {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
 
-  const handleSend = async (e: React.FormEvent) => {
+  const handleSend = async (e: FormEvent) => {
     e.preventDefault();
     const t = title.trim();
     const m = message.trim();
