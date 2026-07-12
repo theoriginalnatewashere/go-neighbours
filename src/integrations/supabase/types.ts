@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          cluster: string
+          created_at: string
+          delivered_count: number
+          id: string
+          message: string
+          sender_id: string
+          title: string
+        }
+        Insert: {
+          cluster: string
+          created_at?: string
+          delivered_count?: number
+          id?: string
+          message: string
+          sender_id: string
+          title: string
+        }
+        Update: {
+          cluster?: string
+          created_at?: string
+          delivered_count?: number
+          id?: string
+          message?: string
+          sender_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
