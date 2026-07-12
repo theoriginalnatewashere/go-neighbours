@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BadgeCheck, Clock, ShieldAlert, ShieldX } from "lucide-react";
+import { BadgeCheck, Clock, Megaphone, ShieldAlert, ShieldX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileShell, ScreenHeader } from "./patterns/shell";
 import { Switch } from "@/components/ui/switch";
