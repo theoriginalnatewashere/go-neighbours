@@ -166,6 +166,8 @@ export default function Notifications() {
             </p>
           )}
         </section>
+
+        {isAdmin && <AdminAnnouncementCard />}
       </main>
     </MobileShell>
   );
