@@ -55,6 +55,23 @@ export default function RequestDetail() {
 
   const isAuthor = !!currentUserId && !!post && post.author_id === currentUserId;
 
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["is-admin", currentUserId],
+    enabled: !!currentUserId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", currentUserId!)
+        .eq("role", "admin")
+        .maybeSingle();
+      return !!data;
+    },
+  });
+
+  const canManage = isAuthor || isAdmin;
+
   const { data: likedIds = new Set<string>() } = useQuery({
     queryKey: ["my-liked-ids"],
     queryFn: listMyLikedPostIds,
@@ -133,7 +150,7 @@ export default function RequestDetail() {
     },
   });
 
-  const rightSlot = isAuthor ? (
+  const rightSlot = canManage ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
@@ -145,14 +162,16 @@ export default function RequestDetail() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onSelect={(e) => {
-            e.preventDefault();
-            navigate({ to: "/create-request", search: { edit: id } });
-          }}
-        >
-          <Pencil className="mr-2 h-4 w-4" /> Edit post
-        </DropdownMenuItem>
+        {isAuthor && (
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              navigate({ to: "/create-request", search: { edit: id } });
+            }}
+          >
+            <Pencil className="mr-2 h-4 w-4" /> Edit post
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
           onSelect={(e) => {
@@ -160,7 +179,7 @@ export default function RequestDetail() {
             setConfirmDelete(true);
           }}
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Delete post
+          <Trash2 className="mr-2 h-4 w-4" /> {isAuthor ? "Delete post" : "Delete post (admin)"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
