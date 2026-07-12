@@ -76,6 +76,21 @@ export default function Notifications() {
     enabled: !!userId,
   });
 
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["is-admin", userId],
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId!)
+        .eq("role", "admin")
+        .maybeSingle();
+      return !!data;
+    },
+  });
+
   const handleToggle = async (next: boolean) => {
     if (!userId || saving) return;
     setSaving(true);
