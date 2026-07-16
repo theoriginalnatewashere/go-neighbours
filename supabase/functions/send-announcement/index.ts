@@ -62,13 +62,16 @@ Deno.serve(async (req) => {
     // Sender's cluster.
     const { data: senderProfile } = await admin
       .from("profiles")
-      .select("neighbourhood")
+      .select("neighbourhood, neighbourhood_key")
       .eq("id", senderId)
       .maybeSingle();
     const cluster = senderProfile?.neighbourhood;
-    if (!cluster) return json({ error: "Admin has no cluster set" }, 400);
+    const clusterKey = senderProfile?.neighbourhood_key;
+    if (!cluster || !clusterKey) {
+      return json({ error: "Admin has no cluster set" }, 400);
+    }
 
-    // Record announcement.
+    // Record announcement (raw cluster kept for display; cluster_key is auto-computed).
     const { data: inserted, error: insertErr } = await admin
       .from("announcements")
       .insert({ sender_id: senderId, cluster, title, message })
@@ -79,12 +82,14 @@ Deno.serve(async (req) => {
       return json({ error: "Could not save announcement" }, 500);
     }
 
-    // Recipients: everyone in the cluster (excluding sender).
+    // Recipients: everyone in the cluster (excluding sender), matched on the
+    // normalized key so casing/whitespace differences don't split the audience.
     const { data: recipients } = await admin
       .from("profiles")
       .select("id")
-      .eq("neighbourhood", cluster)
+      .eq("neighbourhood_key", clusterKey)
       .neq("id", senderId);
+
     const recipientIds = (recipients ?? []).map((r) => r.id);
     if (recipientIds.length === 0) {
       return json({ ok: true, sent: 0, announcementId: inserted.id });

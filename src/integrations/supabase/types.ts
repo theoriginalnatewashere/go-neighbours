@@ -17,6 +17,7 @@ export type Database = {
       announcements: {
         Row: {
           cluster: string
+          cluster_key: string | null
           created_at: string
           delivered_count: number
           id: string
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           cluster: string
+          cluster_key?: string | null
           created_at?: string
           delivered_count?: number
           id?: string
@@ -35,6 +37,7 @@ export type Database = {
         }
         Update: {
           cluster?: string
+          cluster_key?: string | null
           created_at?: string
           delivered_count?: number
           id?: string
@@ -194,6 +197,7 @@ export type Database = {
           building: string | null
           category: string
           cluster: string
+          cluster_key: string | null
           created_at: string
           id: string
           image_urls: string[]
@@ -211,6 +215,7 @@ export type Database = {
           building?: string | null
           category?: string
           cluster: string
+          cluster_key?: string | null
           created_at?: string
           id?: string
           image_urls?: string[]
@@ -228,6 +233,7 @@ export type Database = {
           building?: string | null
           category?: string
           cluster?: string
+          cluster_key?: string | null
           created_at?: string
           id?: string
           image_urls?: string[]
@@ -250,6 +256,7 @@ export type Database = {
           id: string
           interests: string[]
           neighbourhood: string | null
+          neighbourhood_key: string | null
           onboarding_completed: boolean
           room: string | null
           skills: string[]
@@ -269,6 +276,7 @@ export type Database = {
           id: string
           interests?: string[]
           neighbourhood?: string | null
+          neighbourhood_key?: string | null
           onboarding_completed?: boolean
           room?: string | null
           skills?: string[]
@@ -288,6 +296,7 @@ export type Database = {
           id?: string
           interests?: string[]
           neighbourhood?: string | null
+          neighbourhood_key?: string | null
           onboarding_completed?: boolean
           room?: string | null
           skills?: string[]
@@ -359,6 +368,7 @@ export type Database = {
           created_at: string
           id: string
           neighbourhood: string
+          neighbourhood_key: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           reviewer_note: string | null
@@ -373,6 +383,7 @@ export type Database = {
           created_at?: string
           id?: string
           neighbourhood: string
+          neighbourhood_key?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_note?: string | null
@@ -387,6 +398,7 @@ export type Database = {
           created_at?: string
           id?: string
           neighbourhood?: string
+          neighbourhood_key?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_note?: string | null
@@ -429,6 +441,7 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      normalize_cluster: { Args: { _value: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
