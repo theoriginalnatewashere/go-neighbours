@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { Users, ShieldCheck, MessageCircle, type LucideIcon } from "lucide-react";
-import logoAsset from "@/assets/go-neighbours-logo.png.asset.json";
 
 export const features = [
   {
@@ -69,7 +68,7 @@ export function Onboarding() {
       <div className="w-full max-w-md px-6 pt-12 pb-8 flex flex-col">
         <div className="flex justify-center mb-8 h-[20vh] min-h-[128px] max-h-[240px]">
           <img
-            src={logoAsset.url}
+            src="/images/go-neighbours-logo.png"
             alt="Go Neighbours logo"
             width={512}
             height={512}
