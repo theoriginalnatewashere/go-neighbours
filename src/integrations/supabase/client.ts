@@ -52,6 +52,10 @@ function createSupabaseClient() {
       storage: brokeredPreviewStorage(),
       persistSession: true,
       autoRefreshToken: true,
+      // PKCE flow for OAuth providers (e.g. Google) with automatic code
+      // exchange on return, so the session is ready before route guards run.
+      flowType: 'pkce',
+      detectSessionInUrl: true,
     }
   });
 }
