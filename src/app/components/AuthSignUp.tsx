@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { getRedirectForUser } from "@/lib/profileRouting";
 
@@ -71,23 +70,23 @@ export function AuthSignUp() {
     if (googleLoading) return;
     setGoogleLoading(true);
     try {
-      const redirect_uri = next
-        ? `${window.location.origin}${next}`
-        : window.location.origin;
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri });
-      if (result.error) {
-        toast.error(result.error.message ?? "Google sign-in failed");
+      // Native Supabase OAuth (works on any deployment, incl. Cloudflare Workers).
+      // Return to /auth so its beforeLoad awaits session detection (PKCE code
+      // exchange) and then routes via profileRouting — never redirecting before
+      // the session is established.
+      const redirectTo = `${window.location.origin}/auth${
+        next ? `?next=${encodeURIComponent(next)}` : ""
+      }`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      if (error) {
+        toast.error(error.message ?? "Google sign-in failed");
         setGoogleLoading(false);
         return;
       }
-      if (result.redirected) return;
-      if (next) {
-        window.location.href = next;
-      } else {
-        const { data: userData } = await supabase.auth.getUser();
-        const dest = userData.user ? await getRedirectForUser(userData.user.id) : "/location";
-        navigate({ to: dest });
-      }
+      // Browser is navigating to Google; nothing further to do here.
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
