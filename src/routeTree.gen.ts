@@ -55,6 +55,7 @@ import { Route as AppLocationClusterRouteImport } from './routes/app/location.cl
 import { Route as AppLocationScanningRouteImport } from './routes/app/location.scanning'
 import { Route as AppNeighborIdRouteImport } from './routes/app/neighbor.$id'
 import { Route as AppVerifyAddressSubmittedRouteImport } from './routes/app/verify-address.submitted'
+import { Route as AppAuthenticatedAdminNeighbourhoodsRouteImport } from './routes/app/_authenticated/admin.neighbourhoods'
 import { Route as AppAuthenticatedAdminVerificationsRouteImport } from './routes/app/_authenticated/admin.verifications'
 import { Route as AppAuthenticatedChatIdRouteImport } from './routes/app/_authenticated/chat.$id'
 import { Route as AppAuthenticatedRequestIdRouteImport } from './routes/app/_authenticated/request.$id'
@@ -296,6 +297,12 @@ const AppVerifyAddressSubmittedRoute =
     path: '/submitted',
     getParentRoute: () => AppVerifyAddressRoute,
   } as any)
+const AppAuthenticatedAdminNeighbourhoodsRoute =
+  AppAuthenticatedAdminNeighbourhoodsRouteImport.update({
+    id: '/admin/neighbourhoods',
+    path: '/admin/neighbourhoods',
+    getParentRoute: () => AppAuthenticatedRouteRoute,
+  } as any)
 const AppAuthenticatedAdminVerificationsRoute =
   AppAuthenticatedAdminVerificationsRouteImport.update({
     id: '/admin/verifications',
@@ -361,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/app/location/scanning': typeof AppLocationScanningRoute
   '/app/neighbor/$id': typeof AppNeighborIdRoute
   '/app/verify-address/submitted': typeof AppVerifyAddressSubmittedRoute
+  '/app/admin/neighbourhoods': typeof AppAuthenticatedAdminNeighbourhoodsRoute
   '/app/admin/verifications': typeof AppAuthenticatedAdminVerificationsRoute
   '/app/chat/$id': typeof AppAuthenticatedChatIdRoute
   '/app/request/$id': typeof AppAuthenticatedRequestIdRoute
@@ -411,6 +419,7 @@ export interface FileRoutesByTo {
   '/app/location/scanning': typeof AppLocationScanningRoute
   '/app/neighbor/$id': typeof AppNeighborIdRoute
   '/app/verify-address/submitted': typeof AppVerifyAddressSubmittedRoute
+  '/app/admin/neighbourhoods': typeof AppAuthenticatedAdminNeighbourhoodsRoute
   '/app/admin/verifications': typeof AppAuthenticatedAdminVerificationsRoute
   '/app/chat/$id': typeof AppAuthenticatedChatIdRoute
   '/app/request/$id': typeof AppAuthenticatedRequestIdRoute
@@ -463,6 +472,7 @@ export interface FileRoutesById {
   '/app/location/scanning': typeof AppLocationScanningRoute
   '/app/neighbor/$id': typeof AppNeighborIdRoute
   '/app/verify-address/submitted': typeof AppVerifyAddressSubmittedRoute
+  '/app/_authenticated/admin/neighbourhoods': typeof AppAuthenticatedAdminNeighbourhoodsRoute
   '/app/_authenticated/admin/verifications': typeof AppAuthenticatedAdminVerificationsRoute
   '/app/_authenticated/chat/$id': typeof AppAuthenticatedChatIdRoute
   '/app/_authenticated/request/$id': typeof AppAuthenticatedRequestIdRoute
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/app/location/scanning'
     | '/app/neighbor/$id'
     | '/app/verify-address/submitted'
+    | '/app/admin/neighbourhoods'
     | '/app/admin/verifications'
     | '/app/chat/$id'
     | '/app/request/$id'
@@ -566,6 +577,7 @@ export interface FileRouteTypes {
     | '/app/location/scanning'
     | '/app/neighbor/$id'
     | '/app/verify-address/submitted'
+    | '/app/admin/neighbourhoods'
     | '/app/admin/verifications'
     | '/app/chat/$id'
     | '/app/request/$id'
@@ -617,6 +629,7 @@ export interface FileRouteTypes {
     | '/app/location/scanning'
     | '/app/neighbor/$id'
     | '/app/verify-address/submitted'
+    | '/app/_authenticated/admin/neighbourhoods'
     | '/app/_authenticated/admin/verifications'
     | '/app/_authenticated/chat/$id'
     | '/app/_authenticated/request/$id'
@@ -984,6 +997,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVerifyAddressSubmittedRouteImport
       parentRoute: typeof AppVerifyAddressRoute
     }
+    '/app/_authenticated/admin/neighbourhoods': {
+      id: '/app/_authenticated/admin/neighbourhoods'
+      path: '/admin/neighbourhoods'
+      fullPath: '/app/admin/neighbourhoods'
+      preLoaderRoute: typeof AppAuthenticatedAdminNeighbourhoodsRouteImport
+      parentRoute: typeof AppAuthenticatedRouteRoute
+    }
     '/app/_authenticated/admin/verifications': {
       id: '/app/_authenticated/admin/verifications'
       path: '/admin/verifications'
@@ -1040,6 +1060,7 @@ interface AppAuthenticatedRouteRouteChildren {
   AppAuthenticatedHomeRoute: typeof AppAuthenticatedHomeRoute
   AppAuthenticatedMessagesRoute: typeof AppAuthenticatedMessagesRoute
   AppAuthenticatedNotificationsRoute: typeof AppAuthenticatedNotificationsRoute
+  AppAuthenticatedAdminNeighbourhoodsRoute: typeof AppAuthenticatedAdminNeighbourhoodsRoute
   AppAuthenticatedAdminVerificationsRoute: typeof AppAuthenticatedAdminVerificationsRoute
   AppAuthenticatedChatIdRoute: typeof AppAuthenticatedChatIdRoute
   AppAuthenticatedRequestIdRoute: typeof AppAuthenticatedRequestIdRoute
@@ -1051,6 +1072,8 @@ const AppAuthenticatedRouteRouteChildren: AppAuthenticatedRouteRouteChildren = {
   AppAuthenticatedHomeRoute: AppAuthenticatedHomeRoute,
   AppAuthenticatedMessagesRoute: AppAuthenticatedMessagesRoute,
   AppAuthenticatedNotificationsRoute: AppAuthenticatedNotificationsRoute,
+  AppAuthenticatedAdminNeighbourhoodsRoute:
+    AppAuthenticatedAdminNeighbourhoodsRoute,
   AppAuthenticatedAdminVerificationsRoute:
     AppAuthenticatedAdminVerificationsRoute,
   AppAuthenticatedChatIdRoute: AppAuthenticatedChatIdRoute,
