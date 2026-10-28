@@ -33,7 +33,7 @@ export function AuthSignUp() {
       if (mode === "signup") {
         const emailRedirectTo = next
           ? `${window.location.origin}${next}`
-          : `${window.location.origin}/location`;
+          : `${window.location.origin}/app/location`;
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
