@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function RequestDetail() {
-  const { id } = useParams({ from: "/_authenticated/request/$id" });
+  const { id } = useParams({ from: "/app/_authenticated/request/$id" });
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [confirmDelete, setConfirmDelete] = useState(false);

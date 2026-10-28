@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createPost, getPost, updatePost } from "@/lib/posts";
 import { uploadPostImages } from "@/lib/postImages";
-import { Route } from "@/routes/_authenticated/create-request";
+import { Route } from "@/routes/app/_authenticated/create-request";
 import { MobileShell, PrimaryButton, LabeledField, ScreenHeader } from "./patterns/shell";
 import { PostPhotoPicker, type PhotoDraft } from "./PostPhotoPicker";
 
