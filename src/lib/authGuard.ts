@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export async function guardSignedIn() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
-    throw redirect({ to: "/auth" });
+    throw redirect({ to: "/app/auth" });
   }
   return { userId: data.user.id };
 }

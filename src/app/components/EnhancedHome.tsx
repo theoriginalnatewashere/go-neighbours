@@ -162,7 +162,7 @@ export default function EnhancedHome() {
   const isPending = profile?.verification_status === "pending";
 
   const handleEdit = (id: string) => {
-    navigate({ to: "/create-request", search: { edit: id } });
+    navigate({ to: "/app/create-request", search: { edit: id } });
   };
 
   const renderPost = (p: FeedPost, keyPrefix = "") => {
@@ -170,7 +170,7 @@ export default function EnhancedHome() {
     return (
       <Link
         key={`${keyPrefix}${p.id}`}
-        to="/request/$id"
+        to="/app/request/$id"
         params={{ id: p.id }}
         className="block"
       >
@@ -224,7 +224,7 @@ export default function EnhancedHome() {
               <Search className="h-5 w-5" />
             </button>
             <Link
-              to="/notifications"
+              to="/app/notifications"
               aria-label="Notifications"
               className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-card text-foreground shadow-sm hover:bg-secondary"
             >
@@ -319,7 +319,7 @@ export default function EnhancedHome() {
 
       {isVerified ? (
         <Link
-          to="/create-request"
+          to="/app/create-request"
           aria-label="Create request"
           className="fixed right-5 bottom-24 z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95"
         >

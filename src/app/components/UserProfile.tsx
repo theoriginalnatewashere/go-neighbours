@@ -23,9 +23,9 @@ interface ProfileData {
 
 
 const rows = [
-  { id: "edit", label: "Edit profile", icon: Settings, to: "/profile-setup" as const },
-  { id: "address", label: "Verification & address", icon: Shield, to: "/verify-address" as const },
-  { id: "cluster", label: "Cluster settings", icon: MapPin, to: "/location/cluster" as const },
+  { id: "edit", label: "Edit profile", icon: Settings, to: "/app/profile-setup" as const },
+  { id: "address", label: "Verification & address", icon: Shield, to: "/app/verify-address" as const },
+  { id: "cluster", label: "Cluster settings", icon: MapPin, to: "/app/location/cluster" as const },
 ];
 
 export default function UserProfile() {
@@ -68,7 +68,7 @@ export default function UserProfile() {
     queryClient.clear();
     await supabase.auth.signOut();
     toast.success("Signed out");
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/app/auth", replace: true });
   }
 
   if (loading) {
@@ -121,7 +121,7 @@ export default function UserProfile() {
             {rejectedNote && (
               <p className="mt-1 text-foreground/80">Reviewer note: {rejectedNote}</p>
             )}
-            <Link to="/verify-address" className="mt-2 inline-block text-sm font-medium text-primary underline">
+            <Link to="/app/verify-address" className="mt-2 inline-block text-sm font-medium text-primary underline">
               Update details and resubmit
             </Link>
           </section>
@@ -182,7 +182,7 @@ export default function UserProfile() {
 
         {isAdmin && (
           <Link
-            to="/admin/verifications"
+            to="/app/admin/verifications"
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-secondary"
           >
             <ShieldCheck className="h-4 w-4" /> Review verifications

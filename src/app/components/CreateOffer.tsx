@@ -10,7 +10,7 @@ export default function CreateOffer() {
 
   return (
     <MobileShell>
-      <ScreenHeader title="New offer" backTo="/home" />
+      <ScreenHeader title="New offer" backTo="/app/home" />
 
       <main className="flex-1 space-y-5 px-4 pb-32">
         <div className="flex items-start gap-3 rounded-2xl bg-accent/30 p-4">
@@ -70,7 +70,7 @@ export default function CreateOffer() {
       </main>
 
       <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-        <Link to="/success" search={{ kind: "offer" }}>
+        <Link to="/app/success" search={{ kind: "offer" }}>
           <PrimaryButton>Share offer</PrimaryButton>
         </Link>
       </div>

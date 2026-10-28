@@ -30,7 +30,7 @@ export function AdminVerifications() {
   async function load() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
-      navigate({ to: "/auth" });
+      navigate({ to: "/app/auth" });
       return;
     }
     const { data: roles } = await supabase
@@ -97,7 +97,7 @@ export function AdminVerifications() {
           <p className="mt-1 text-sm text-muted-foreground">
             You don't have permission to review verifications.
           </p>
-          <Link to="/home" className="mt-4 inline-block text-sm text-primary underline">
+          <Link to="/app/home" className="mt-4 inline-block text-sm text-primary underline">
             Back to home
           </Link>
         </div>
@@ -109,7 +109,7 @@ export function AdminVerifications() {
     <main className="min-h-screen bg-background flex justify-center">
       <div className="w-full max-w-2xl px-5 pt-6 pb-12">
         <div className="flex items-center gap-3 mb-4">
-          <Link to="/profile" aria-label="Back" className="h-10 w-10 -ml-2 flex items-center justify-center rounded-full hover:bg-secondary">
+          <Link to="/app/profile" aria-label="Back" className="h-10 w-10 -ml-2 flex items-center justify-center rounded-full hover:bg-secondary">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-xl font-semibold tracking-tight">Verification review</h1>

@@ -12,7 +12,7 @@ export const Route = createFileRoute("/app/_authenticated/home")({
       .eq("id", userId)
       .maybeSingle();
     if (!data?.onboarding_completed) {
-      throw redirect({ to: "/location" });
+      throw redirect({ to: "/app/location" });
     }
   },
   head: () => ({

@@ -3,7 +3,7 @@ import { Onboarding } from "@/app/components/Onboarding";
 import { supabase } from "@/integrations/supabase/client";
 import { getRedirectForUser } from "@/lib/profileRouting";
 
-export const Route = createFileRoute("/app/app/")({
+export const Route = createFileRoute("/app/")({
   ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();

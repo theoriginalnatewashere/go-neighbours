@@ -89,7 +89,7 @@ export default function Messages() {
               onClick={(id) => {
                 if (!id) return;
                 navigate({
-                  to: "/chat/$id",
+                  to: "/app/chat/$id",
                   params: { id },
                   search: {
                     conv: source.conversationId,
@@ -106,7 +106,7 @@ export default function Messages() {
             <p className="text-sm font-medium text-foreground">No conversations yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Open a neighbour's profile and tap{" "}
-              <Link to="/browse" className="underline">
+              <Link to="/app/browse" className="underline">
                 Message
               </Link>{" "}
               to start chatting.

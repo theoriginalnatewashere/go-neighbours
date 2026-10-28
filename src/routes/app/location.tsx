@@ -7,7 +7,7 @@ export const Route = createFileRoute("/app/location")({
   beforeLoad: async () => {
     await guardSignedIn();
     if (typeof window !== "undefined" && sessionStorage.getItem(LOCATION_SKIPPED_KEY) === "1") {
-      throw redirect({ to: "/profile-setup" });
+      throw redirect({ to: "/app/profile-setup" });
     }
   },
   head: () => ({

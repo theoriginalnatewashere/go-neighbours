@@ -46,7 +46,7 @@ export function ClusterScanning() {
 
   useEffect(() => {
     if (stepIdx >= steps.length) {
-      const t = setTimeout(() => navigate({ to: "/location/cluster" }), 600);
+      const t = setTimeout(() => navigate({ to: "/app/location/cluster" }), 600);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => setStepIdx((s) => s + 1), 1100);
@@ -60,7 +60,7 @@ export function ClusterScanning() {
       <div className="w-full max-w-md px-5 pt-6 pb-8 flex flex-col">
         <div className="flex items-center gap-3 mb-4">
           <Link
-            to="/location"
+            to="/app/location"
             aria-label="Go back"
             className="h-10 w-10 -ml-2 flex items-center justify-center rounded-full hover:bg-secondary active:scale-95 transition"
           >
@@ -133,13 +133,13 @@ export function ClusterScanning() {
         </section>
 
         <Link
-          to="/location/cluster"
+          to="/app/location/cluster"
           className="mt-6 w-full h-12 rounded-2xl bg-card border border-border text-foreground font-medium text-[15px] flex items-center justify-center active:scale-[0.99] transition"
         >
           Continue in background
         </Link>
         <Link
-          to="/location"
+          to="/app/location"
           className="mt-2 w-full h-11 rounded-2xl text-muted-foreground font-medium text-[14px] flex items-center justify-center hover:bg-secondary transition"
         >
           Cancel

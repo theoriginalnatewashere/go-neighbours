@@ -40,7 +40,7 @@ export function VerificationSubmitted() {
         </section>
 
         <Link
-          to="/home"
+          to="/app/home"
           className="mt-8 w-full h-13 py-3.5 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center active:scale-[0.99] transition shadow-sm"
         >
           Go to home

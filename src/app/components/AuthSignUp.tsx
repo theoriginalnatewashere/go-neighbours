@@ -17,7 +17,7 @@ function GoogleIcon({ className }: { className?: string }) {
 
 export function AuthSignUp() {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/auth" }) as { next?: string };
+  const search = useSearch({ from: "/app/auth" }) as { next?: string };
   const next = search.next;
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
@@ -43,7 +43,7 @@ export function AuthSignUp() {
         if (data.session && data.user) {
           toast.success("Account created. Let's set up your profile.");
           if (next) window.location.href = next;
-          else navigate({ to: "/location" });
+          else navigate({ to: "/app/location" });
         } else {
           toast.success("Check your email to confirm your account.");
           setMode("login");
@@ -55,7 +55,7 @@ export function AuthSignUp() {
         if (next) {
           window.location.href = next;
         } else {
-          const dest = data.user ? await getRedirectForUser(data.user.id) : "/home";
+          const dest = data.user ? await getRedirectForUser(data.user.id) : "/app/home";
           navigate({ to: dest });
         }
       }

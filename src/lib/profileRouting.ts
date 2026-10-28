@@ -1,12 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export async function getRedirectForUser(userId: string): Promise<"/home" | "/location"> {
+export async function getRedirectForUser(userId: string): Promise<"/app/home" | "/app/location"> {
   const { data } = await supabase
     .from("profiles")
     .select("onboarding_completed")
     .eq("id", userId)
     .maybeSingle();
-  return data?.onboarding_completed ? "/home" : "/location";
+  return data?.onboarding_completed ? "/app/home" : "/app/location";
 }
 
 export async function requireSignedIn(): Promise<string> {

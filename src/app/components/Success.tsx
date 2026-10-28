@@ -33,10 +33,10 @@ export default function Success({ kind = "default" }: { kind?: string }) {
 
       <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="space-y-2">
-          <Link to="/home">
+          <Link to="/app/home">
             <PrimaryButton>Back to home</PrimaryButton>
           </Link>
-          <Link to="/messages">
+          <Link to="/app/messages">
             <button
               type="button"
               className="inline-flex h-12 w-full items-center justify-center rounded-full border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary"

@@ -175,9 +175,9 @@ export default function Chat() {
   return (
     <MobileShell>
       <ScreenHeader
-        backTo="/messages"
+        backTo="/app/messages"
         rightSlot={
-          <Link to="/neighbor/$id" params={{ id: otherUserId }}>
+          <Link to="/app/neighbor/$id" params={{ id: otherUserId }}>
             <NeighborAvatar name={partnerName} size="sm" />
           </Link>
         }
@@ -222,7 +222,7 @@ export default function Chat() {
             </div>
             {postContext.available && (
               <Link
-                to="/request/$id"
+                to="/app/request/$id"
                 params={{ id: postContext.postId }}
                 className="shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/15"
               >
@@ -248,7 +248,7 @@ export default function Chat() {
             <p className="mt-1">
               This chat may have been removed or you don't have access to it.
             </p>
-            <Link to="/messages" className="mt-3 inline-block text-primary underline">
+            <Link to="/app/messages" className="mt-3 inline-block text-primary underline">
               Back to Messages
             </Link>
           </div>
