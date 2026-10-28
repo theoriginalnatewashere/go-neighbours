@@ -22,6 +22,7 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as PatternsRouteImport } from './routes/patterns'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProfileSetupRouteImport } from './routes/profile-setup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SuccessRouteImport } from './routes/success'
 import { Route as VerifyAddressRouteImport } from './routes/verify-address'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -121,6 +122,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const ProfileSetupRoute = ProfileSetupRouteImport.update({
   id: '/profile-setup',
   path: '/profile-setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SuccessRoute = SuccessRouteImport.update({
@@ -322,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
   '/app': typeof AppAuthenticatedRouteRouteWithChildren
@@ -372,6 +379,7 @@ export interface FileRoutesByTo {
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
   '/app': typeof AppIndexRoute
@@ -422,6 +430,7 @@ export interface FileRoutesById {
   '/patterns': typeof PatternsRoute
   '/profile': typeof ProfileRoute
   '/profile-setup': typeof ProfileSetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/verify-address': typeof VerifyAddressRouteWithChildren
   '/app/_authenticated': typeof AppAuthenticatedRouteRouteWithChildren
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/patterns'
     | '/profile'
     | '/profile-setup'
+    | '/sitemap.xml'
     | '/success'
     | '/verify-address'
     | '/app'
@@ -524,6 +534,7 @@ export interface FileRouteTypes {
     | '/patterns'
     | '/profile'
     | '/profile-setup'
+    | '/sitemap.xml'
     | '/success'
     | '/verify-address'
     | '/app'
@@ -573,6 +584,7 @@ export interface FileRouteTypes {
     | '/patterns'
     | '/profile'
     | '/profile-setup'
+    | '/sitemap.xml'
     | '/success'
     | '/verify-address'
     | '/app/_authenticated'
@@ -624,6 +636,7 @@ export interface RootRouteChildren {
   PatternsRoute: typeof PatternsRoute
   ProfileRoute: typeof ProfileRoute
   ProfileSetupRoute: typeof ProfileSetupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuccessRoute: typeof SuccessRoute
   VerifyAddressRoute: typeof VerifyAddressRouteWithChildren
   AppAuthenticatedRouteRoute: typeof AppAuthenticatedRouteRouteWithChildren
@@ -738,6 +751,13 @@ declare module '@tanstack/react-router' {
       path: '/profile-setup'
       fullPath: '/profile-setup'
       preLoaderRoute: typeof ProfileSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/success': {
@@ -1081,6 +1101,7 @@ const rootRouteChildren: RootRouteChildren = {
   PatternsRoute: PatternsRoute,
   ProfileRoute: ProfileRoute,
   ProfileSetupRoute: ProfileSetupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuccessRoute: SuccessRoute,
   VerifyAddressRoute: VerifyAddressRouteWithChildren,
   AppAuthenticatedRouteRoute: AppAuthenticatedRouteRouteWithChildren,

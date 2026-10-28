@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useEffect, useMemo } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   Heart,
   HandHeart,
@@ -14,52 +15,87 @@ import {
   X,
   MessageSquare,
 } from "lucide-react";
-import logoAsset from "../assets/go-neighbours-logo.png.asset.json";
-import heroScreenshotAsset from "../assets/hero-screenshot.png.asset.json";
-import askingHelpAsset from "../assets/asking-help.png.asset.json";
-import requestLiveAsset from "../assets/request-live.png.asset.json";
-import { InstallAppModal } from "@/components/install-app-modal";
+import { InstallAppModal } from "@/components/landing/install-app-modal";
+import { supabase } from "@/integrations/supabase/client";
+import { activeNeighbourhoodsQuery } from "@/lib/neighbourhoodDirectory.functions";
+import { filterDirectory, groupDirectory } from "@/lib/neighbourhoodDirectory";
+
+const LOGO_SRC = "/images/landing/go-neighbours-logo.png";
+const HERO_SRC = "/images/landing/hero-screenshot.webp";
+const ASKING_HELP_SRC = "/images/landing/asking-help.png";
+const REQUEST_LIVE_SRC = "/images/landing/request-live.webp";
+const OG_IMAGE = "https://go-neighbours.lovable.app/images/landing/og-share.jpg";
 
 export const Route = createFileRoute("/")({
-  staticData: { sitemap: true },
+  loader: ({ context }) => context.queryClient.ensureQueryData(activeNeighbourhoodsQuery),
   component: Index,
   head: () => ({
     meta: [
       {
-        title: "Go Neighbors — Connect with your local community",
+        title: "Go Neighbours — Connect with your local community",
       },
       {
         name: "description",
         content:
-          "Go Neighbors is a local community platform that helps you connect with the people living around you.",
+          "Go Neighbours is a local community platform that helps you connect with the people living around you.",
       },
       {
         property: "og:title",
-        content: "Go Neighbors — Connect with your local community",
+        content: "Go Neighbours — Connect with your local community",
       },
       {
         property: "og:description",
         content:
-          "Go Neighbors is a local community platform that helps you connect with the people living around you.",
+          "Go Neighbours is a local community platform that helps you connect with the people living around you.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://goneighbors.lovable.app/og-share.jpg" },
+      { property: "og:image", content: OG_IMAGE },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://goneighbors.lovable.app/og-share.jpg" },
+      { name: "twitter:title", content: "Go Neighbours — Connect with your local community" },
+      { name: "twitter:image", content: OG_IMAGE },
+    ],
+    links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Serif+Display:ital@0;1&display=swap",
+      },
     ],
   }),
 });
 
-const NEIGHBOURHOODS = {
-  Utrecht: [
-    { name: "Keramus Building", whatsappLink: "https://chat.whatsapp.com/E8Y3oOyhzVr3YXyrtHYSib" },
-  ],
-  Delft: [
-    { name: "TUDelft Campus", whatsappLink: "https://chat.whatsapp.com/KoTrWoLY88IIMJ4Li77G79?s=cl&p=i&mlu=4&ilr=4" },
-  ],
-} as const;
+/** Reads the session after hydration so guests and members get the right button. */
+function useIsSignedIn(): boolean {
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) setSignedIn(Boolean(data.session));
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return signedIn;
+}
 
-type City = keyof typeof NEIGHBOURHOODS;
+function PrimaryCta({ signedIn, className, children }: { signedIn: boolean; className: string; children?: React.ReactNode }) {
+  if (signedIn) {
+    return (
+      <Link to="/app/home" className={className}>
+        Open app
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <Link to="/app/auth" className={className}>
+      Join your neighbourhood
+      {children}
+    </Link>
+  );
+}
 
 function scrollToId(id: string) {
   const element = document.getElementById(id);
@@ -102,7 +138,7 @@ function SmartphoneIcon({ className }: { className?: string }) {
   );
 }
 
-function Header({ onInstallClick }: { onInstallClick: () => void }) {
+function Header({ onInstallClick, signedIn }: { onInstallClick: () => void; signedIn: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -130,7 +166,7 @@ function Header({ onInstallClick }: { onInstallClick: () => void }) {
           className="flex items-center"
         >
           <img
-            src={logoAsset.url}
+            src={LOGO_SRC}
             alt="Go Neighbours"
             className="h-[108px] w-auto"
           />
@@ -157,10 +193,22 @@ function Header({ onInstallClick }: { onInstallClick: () => void }) {
           </button>
           <button
             onClick={() => scrollToId("join")}
-            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98]"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Join your neighbourhood
+            Neighbourhoods
           </button>
+          {!signedIn && (
+            <Link
+              to="/app/auth"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Sign in
+            </Link>
+          )}
+          <PrimaryCta
+            signedIn={signedIn}
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98]"
+          />
         </nav>
 
         <button
@@ -207,10 +255,22 @@ function Header({ onInstallClick }: { onInstallClick: () => void }) {
                 scrollToId("join");
                 setMobileOpen(false);
               }}
-              className="mt-1 inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98]"
+              className="rounded-lg px-3 py-2 text-left text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              Join your neighbourhood
+              Neighbourhoods
             </button>
+            {!signedIn && (
+              <Link
+                to="/app/auth"
+                className="rounded-lg px-3 py-2 text-left text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                Sign in
+              </Link>
+            )}
+            <PrimaryCta
+              signedIn={signedIn}
+              className="mt-1 inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98]"
+            />
           </nav>
         </div>
       )}
@@ -218,7 +278,7 @@ function Header({ onInstallClick }: { onInstallClick: () => void }) {
   );
 }
 
-function Hero() {
+function Hero({ signedIn }: { signedIn: boolean }) {
   return (
     <section className="relative overflow-hidden px-5 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8 lg:pb-24 lg:pt-20">
       <div className="mx-auto max-w-6xl">
@@ -232,18 +292,17 @@ function Hero() {
               Your neighbourhood, a little closer.
             </h1>
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              Go Neighbors is a local community platform that helps you connect with the people
+              Go Neighbours is a local community platform that helps you connect with the people
               living around you, whether you want to ask for help, share something, discover what's
               happening nearby, or simply get to know your neighbours.
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <button
-                onClick={() => scrollToId("join")}
+              <PrimaryCta
+                signedIn={signedIn}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98]"
               >
-                Join your neighbourhood
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </PrimaryCta>
               <p className="text-sm font-medium text-muted-foreground sm:pl-2">
                 Connect with your local community.
               </p>
@@ -253,7 +312,7 @@ function Hero() {
           <div className="flex justify-center lg:justify-end">
             <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-[2.25rem] border-4 border-border bg-muted p-2 shadow-sm sm:max-w-[320px]">
               <img
-                src={heroScreenshotAsset.url}
+                src={HERO_SRC}
                 alt="Go Neighbours app welcome screen"
                 className="aspect-[9/19] w-full rounded-[1.75rem] object-cover object-top"
               />
@@ -296,7 +355,7 @@ function Why() {
             many of us barely know the people living a few doors away.
           </p>
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-            Go Neighbors is about changing that by making it easier to create stronger, more
+            Go Neighbours is about changing that by making it easier to create stronger, more
             helpful and more connected local communities.
           </p>
         </div>
@@ -371,14 +430,14 @@ function HowItWorks() {
         <div className="mt-12 grid gap-8 sm:grid-cols-2">
           <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-[2.25rem] border-4 border-border bg-muted p-2 shadow-sm sm:max-w-[320px]">
             <img
-              src={askingHelpAsset.url}
+              src={ASKING_HELP_SRC}
               alt="Asking neighbours for help in the Go Neighbours app"
               className="aspect-[9/19] w-full rounded-[1.75rem] object-cover object-top"
             />
           </div>
           <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-[2.25rem] border-4 border-border bg-muted p-2 shadow-sm sm:max-w-[320px]">
             <img
-              src={requestLiveAsset.url}
+              src={REQUEST_LIVE_SRC}
               alt="A request going live to nearby neighbours in the Go Neighbours app"
               className="aspect-[9/19] w-full rounded-[1.75rem] object-cover object-top"
             />
@@ -429,18 +488,24 @@ function WhatMakesDifferent() {
   );
 }
 
-function Join() {
-  const cities = Object.keys(NEIGHBOURHOODS) as City[];
-  const [city, setCity] = useState<City>(cities[0] ?? "Utrecht");
-  const cityNeighbourhoods = NEIGHBOURHOODS[city];
-  const [neighbourhood, setNeighbourhood] = useState<string>(cityNeighbourhoods[0].name);
+function Join({ signedIn }: { signedIn: boolean }) {
+  const { data: entries } = useSuspenseQuery(activeNeighbourhoodsQuery);
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
 
-  const currentNeighbourhood = cityNeighbourhoods.find((n) => n.name === neighbourhood);
-  const whatsappLink = currentNeighbourhood?.whatsappLink || "#";
+  const countries = useMemo(() => [...new Set(entries.map((e) => e.country))].sort(), [entries]);
+  const cities = useMemo(
+    () => [...new Set(filterDirectory(entries, country, "").map((e) => e.city))].sort(),
+    [entries, country],
+  );
+  const grouped = useMemo(() => groupDirectory(filterDirectory(entries, country, city)), [entries, country, city]);
 
   useEffect(() => {
-    setNeighbourhood(NEIGHBOURHOODS[city][0].name);
-  }, [city]);
+    if (city && !cities.includes(city)) setCity("");
+  }, [cities, city]);
+
+  const selectClass =
+    "w-full appearance-none rounded-xl border border-input bg-background px-4 py-3 text-base text-foreground outline-none ring-ring transition-all focus:border-primary focus:ring-2 focus:ring-ring";
 
   return (
     <section id="join" className="px-5 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
@@ -449,23 +514,37 @@ function Join() {
           <MessageCircle className="h-7 w-7" />
         </div>
         <h2 className="mt-6 font-display text-3xl font-medium tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-          Find your neighbours
+          Explore active neighbourhoods
         </h2>
-        <p className="mt-4 text-lg text-muted-foreground">Choose where you live and join the conversation.</p>
+        <p className="mt-4 text-lg text-muted-foreground">
+          See where neighbours are already connecting on Go Neighbours.
+        </p>
 
         <div className="mt-10 rounded-3xl border border-border bg-card p-6 text-left shadow-sm sm:p-8">
           <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label htmlFor="country" className="text-sm font-semibold text-foreground">
+                Country
+              </label>
+              <div className="relative">
+                <select id="country" value={country} onChange={(e) => setCountry(e.target.value)} className={selectClass}>
+                  <option value="">All countries</option>
+                  {countries.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              </div>
+            </div>
             <div className="space-y-2">
               <label htmlFor="city" className="text-sm font-semibold text-foreground">
                 City
               </label>
               <div className="relative">
-                <select
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value as City)}
-                  className="w-full appearance-none rounded-xl border border-input bg-background px-4 py-3 text-base text-foreground outline-none ring-ring transition-all focus:border-primary focus:ring-2 focus:ring-ring"
-                >
+                <select id="city" value={city} onChange={(e) => setCity(e.target.value)} className={selectClass}>
+                  <option value="">All cities</option>
                   {cities.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -475,38 +554,52 @@ function Join() {
                 <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
-
-            <div className="space-y-2">
-              <label htmlFor="neighbourhood" className="text-sm font-semibold text-foreground">
-                Neighbourhood / Building
-              </label>
-              <div className="relative">
-                <select
-                  id="neighbourhood"
-                  value={neighbourhood}
-                  onChange={(e) => setNeighbourhood(e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-input bg-background px-4 py-3 text-base text-foreground outline-none ring-ring transition-all focus:border-primary focus:ring-2 focus:ring-ring"
-                >
-                  {cityNeighbourhoods.map((n) => (
-                    <option key={n.name} value={n.name}>
-                      {n.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              </div>
-            </div>
           </div>
 
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-4 text-base font-bold text-white shadow-sm transition-all hover:bg-[#128C7E] hover:shadow-md active:scale-[0.98]"
+          {grouped.length === 0 ? (
+            <p className="mt-8 rounded-2xl bg-secondary/60 px-5 py-6 text-center text-base text-muted-foreground">
+              No active neighbourhoods here yet.
+            </p>
+          ) : (
+            <div className="mt-8 space-y-6">
+              {grouped.map((group) => (
+                <div key={group.country}>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.country}</h3>
+                  <div className="mt-3 space-y-4">
+                    {group.cities.map((c) => (
+                      <div key={c.city}>
+                        <p className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          {c.city}
+                        </p>
+                        <ul className="mt-2 flex flex-col gap-2">
+                          {c.neighbourhoods.map((name) => (
+                            <li
+                              key={name}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3"
+                            >
+                              <span className="text-base text-foreground">{name}</span>
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+                                Active
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <PrimaryCta
+            signedIn={signedIn}
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.98]"
           >
-            <WhatsAppIcon className="h-5 w-5" />
-            Join {neighbourhood} neighbours on WhatsApp
-          </a>
+            <ArrowRight className="h-4 w-4" />
+          </PrimaryCta>
 
           <div className="mt-5 text-center">
             <p className="text-sm text-muted-foreground">
@@ -542,20 +635,7 @@ function ChevronDownIcon({ className }: { className?: string }) {
   );
 }
 
-function WhatsAppIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.203-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.999-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-    </svg>
-  );
-}
-
-function FinalCTA() {
+function FinalCTA({ signedIn }: { signedIn: boolean }) {
   return (
     <section id="final-cta" className="px-5 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 lg:px-8 lg:pb-24">
       <div className="mx-auto max-w-3xl rounded-3xl bg-primary px-6 py-14 text-center sm:px-10 sm:py-18 lg:py-20">
@@ -563,18 +643,17 @@ function FinalCTA() {
           Good neighbours make good neighbourhoods.
         </h2>
         <p className="mt-4 text-lg text-primary-foreground/80">Meet yours.</p>
-        <button
-          onClick={() => scrollToId("join")}
+        <PrimaryCta
+          signedIn={signedIn}
           className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-background px-8 py-4 text-base font-semibold text-primary shadow-sm transition-all hover:bg-background/90 active:scale-[0.98]"
         >
-          Join your neighbourhood
           <ArrowRight className="h-4 w-4" />
-        </button>
+        </PrimaryCta>
       </div>
 
       <footer className="mt-16 text-center">
         <p className="text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Go Neighbors. Built for local communities.
+          © {new Date().getFullYear()} Go Neighbours. Built for local communities.
         </p>
       </footer>
     </section>
@@ -583,17 +662,18 @@ function FinalCTA() {
 
 function Index() {
   const [installOpen, setInstallOpen] = useState(false);
+  const signedIn = useIsSignedIn();
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground">
-      <Header onInstallClick={() => setInstallOpen(true)} />
+    <div className="landing-theme min-h-screen bg-background font-sans text-foreground">
+      <Header onInstallClick={() => setInstallOpen(true)} signedIn={signedIn} />
       <main>
-        <Hero />
+        <Hero signedIn={signedIn} />
         <Why />
         <HowItWorks />
         <WhatMakesDifferent />
-        <Join />
-        <FinalCTA />
+        <Join signedIn={signedIn} />
+        <FinalCTA signedIn={signedIn} />
       </main>
       <InstallAppModal
         open={installOpen}

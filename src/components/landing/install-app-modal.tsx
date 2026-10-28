@@ -10,8 +10,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export const APP_URL = "https://go-neighbours.lovable.app";
-export const APP_URL_LABEL = "go-neighbours.lovable.app";
+export const APP_URL = "https://go-neighbours.lovable.app/app";
+export const APP_URL_LABEL = "go-neighbours.lovable.app/app";
 
 type Platform = "ios" | "android";
 
