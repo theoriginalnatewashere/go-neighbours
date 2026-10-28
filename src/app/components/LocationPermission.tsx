@@ -46,7 +46,7 @@ export function LocationPermission() {
     } catch {
       // sessionStorage may be unavailable (private mode); skip silently
     }
-    navigate({ to: "/profile-setup", replace: true });
+    navigate({ to: "/app/profile-setup", replace: true });
   }
 
   return (
@@ -55,7 +55,7 @@ export function LocationPermission() {
         <div className="flex items-center gap-3 mb-4">
 
           <Link
-            to="/auth"
+            to="/app/auth"
             aria-label="Go back"
             className="h-10 w-10 -ml-2 flex items-center justify-center rounded-full hover:bg-secondary active:scale-95 transition"
           >
@@ -98,7 +98,7 @@ export function LocationPermission() {
         </section>
 
         <Link
-          to="/location/scanning"
+          to="/app/location/scanning"
           className="mt-6 w-full h-13 py-3.5 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition shadow-sm"
         >
           <MapPin className="h-[18px] w-[18px]" strokeWidth={2.2} />

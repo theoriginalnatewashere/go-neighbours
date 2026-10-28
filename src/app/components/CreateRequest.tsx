@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createPost, getPost, updatePost } from "@/lib/posts";
 import { uploadPostImages } from "@/lib/postImages";
-import { Route } from "@/routes/_authenticated/create-request";
+import { Route } from "@/routes/app/_authenticated/create-request";
 import { MobileShell, PrimaryButton, LabeledField, ScreenHeader } from "./patterns/shell";
 import { PostPhotoPicker, type PhotoDraft } from "./PostPhotoPicker";
 
@@ -50,7 +50,7 @@ export default function CreateRequest() {
   useEffect(() => {
     if (profile && !isVerified) {
       toast.info("Posting is available once your address is verified.");
-      navigate({ to: "/verify-address" });
+      navigate({ to: "/app/verify-address" });
     }
   }, [profile, isVerified, navigate]);
 
@@ -77,7 +77,7 @@ export default function CreateRequest() {
       toast.success("Post shared with your neighbours");
       qc.invalidateQueries({ queryKey: ["cluster-posts"] });
       qc.invalidateQueries({ queryKey: ["my-posts"] });
-      navigate({ to: "/success", search: { kind: "request" } });
+      navigate({ to: "/app/success", search: { kind: "request" } });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -89,7 +89,7 @@ export default function CreateRequest() {
       qc.invalidateQueries({ queryKey: ["cluster-posts"] });
       qc.invalidateQueries({ queryKey: ["my-posts"] });
       qc.invalidateQueries({ queryKey: ["edit-post", editId] });
-      navigate({ to: "/home" });
+      navigate({ to: "/app/home" });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -125,7 +125,7 @@ export default function CreateRequest() {
 
   return (
     <MobileShell>
-      <ScreenHeader title={isEdit ? "Edit post" : "New request"} backTo="/home" />
+      <ScreenHeader title={isEdit ? "Edit post" : "New request"} backTo="/app/home" />
 
       <main className="flex-1 space-y-5 px-4 pb-32">
         {isEdit && loadingExisting ? (

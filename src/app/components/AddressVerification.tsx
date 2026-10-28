@@ -125,7 +125,7 @@ export function AddressVerification() {
     }
     if (status === "approved") {
       toast.success("You're already verified.");
-      navigate({ to: "/home" });
+      navigate({ to: "/app/home" });
       return;
     }
     if (!address.trim() || !neighbourhood.trim()) {
@@ -185,7 +185,7 @@ export function AddressVerification() {
       <form onSubmit={handleSubmit} className="w-full max-w-md px-5 pt-6 pb-8 flex flex-col">
         <div className="flex items-center gap-3 mb-6">
           <Link
-            to="/profile-setup"
+            to="/app/profile-setup"
             aria-label="Go back"
             className="h-10 w-10 -ml-2 flex items-center justify-center rounded-full hover:bg-secondary active:scale-95 transition"
           >
@@ -323,7 +323,7 @@ export function AddressVerification() {
             type="button"
             onClick={() => {
               setShowSubmittedModal(false);
-              navigate({ to: "/home" });
+              navigate({ to: "/app/home" });
             }}
             className="mt-4 w-full h-12 rounded-2xl bg-foreground text-background font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition shadow-sm"
           >

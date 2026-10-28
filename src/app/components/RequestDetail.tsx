@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function RequestDetail() {
-  const { id } = useParams({ from: "/_authenticated/request/$id" });
+  const { id } = useParams({ from: "/app/_authenticated/request/$id" });
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -98,7 +98,7 @@ export default function RequestDetail() {
       qc.invalidateQueries({ queryKey: ["cluster-posts"] });
       qc.invalidateQueries({ queryKey: ["my-liked-posts"] });
       toast.success("Post deleted successfully.");
-      navigate({ to: "/home" });
+      navigate({ to: "/app/home" });
     },
     onError: (e: Error) => {
       toast.error(e.message || "Could not delete post");
@@ -166,7 +166,7 @@ export default function RequestDetail() {
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
-              navigate({ to: "/create-request", search: { edit: id } });
+              navigate({ to: "/app/create-request", search: { edit: id } });
             }}
           >
             <Pencil className="mr-2 h-4 w-4" /> Edit post
@@ -195,7 +195,7 @@ export default function RequestDetail() {
 
   return (
     <MobileShell>
-      <ScreenHeader title="Request" backTo="/browse" rightSlot={rightSlot} />
+      <ScreenHeader title="Request" backTo="/app/browse" rightSlot={rightSlot} />
 
       <main className="flex-1 space-y-4 px-4 pb-32">
         {isLoading ? (
@@ -207,7 +207,7 @@ export default function RequestDetail() {
               This post may have been removed, or it belongs to a different cluster.
             </p>
             <Link
-              to="/browse"
+              to="/app/browse"
               className="mt-4 inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               Back to Browse
@@ -296,7 +296,7 @@ export default function RequestDetail() {
 
       {post && post.author_id && !isAuthor && (
         <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-          <Link to="/chat/$id" params={{ id: post.author_id }} search={{ post: post.id }}>
+          <Link to="/app/chat/$id" params={{ id: post.author_id }} search={{ post: post.id }}>
             <PrimaryButton icon={MessageCircle}>I can help</PrimaryButton>
           </Link>
         </div>

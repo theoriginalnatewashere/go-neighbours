@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     const payload = JSON.stringify({
       title: "New message about your post",
       body: `${senderName} sent you a message.`,
-      url: `/chat/${senderId}`,
+      url: `/app/chat/${senderId}`,
       conversationId,
       senderId,
     });

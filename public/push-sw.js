@@ -13,7 +13,7 @@ self.addEventListener("push", (event) => {
     body: data.body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    data: { url: data.url || "/messages" },
+    data: { url: data.url || "/app/messages" },
     tag: data.conversationId || "gn-message",
   };
   event.waitUntil(self.registration.showNotification(title, options));
@@ -21,7 +21,7 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || "/messages";
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/app/messages";
   event.waitUntil(
     (async () => {
       const clientsList = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

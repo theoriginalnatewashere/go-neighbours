@@ -27,11 +27,11 @@ const recent: Post[] = [
 ];
 
 export default function NeighborProfile() {
-  const { id } = useParams({ from: "/neighbor/$id" });
+  const { id } = useParams({ from: "/app/neighbor/$id" });
 
   return (
     <MobileShell>
-      <ScreenHeader title="Neighbour" backTo="/browse" />
+      <ScreenHeader title="Neighbour" backTo="/app/browse" />
 
       <main className="flex-1 space-y-4 px-4 pb-32">
         <section className="flex flex-col items-center rounded-2xl border border-border bg-card p-5 text-center shadow-sm">
@@ -79,7 +79,7 @@ export default function NeighborProfile() {
       </main>
 
       <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-        <Link to="/chat/$id" params={{ id }}>
+        <Link to="/app/chat/$id" params={{ id }}>
           <PrimaryButton icon={MessageCircle}>Message</PrimaryButton>
         </Link>
       </div>

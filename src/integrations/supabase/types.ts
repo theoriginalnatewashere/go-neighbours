@@ -137,6 +137,36 @@ export type Database = {
           },
         ]
       }
+      neighbourhood_directory: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          display_name: string
+          is_active: boolean
+          neighbourhood_key: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          display_name: string
+          is_active?: boolean
+          neighbourhood_key: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          display_name?: string
+          is_active?: boolean
+          neighbourhood_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -416,6 +446,14 @@ export type Database = {
     Functions: {
       current_user_neighbourhood: { Args: never; Returns: string }
       current_user_verification_status: { Args: never; Returns: string }
+      get_active_neighbourhoods: {
+        Args: never
+        Returns: {
+          city: string
+          country: string
+          name: string
+        }[]
+      }
       get_conversation_partners: {
         Args: never
         Returns: {

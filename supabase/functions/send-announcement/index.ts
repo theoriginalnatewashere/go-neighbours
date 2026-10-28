@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
     const payload = JSON.stringify({
       title,
       body: message,
-      url: `/notifications`,
+      url: `/app/notifications`,
       announcementId: inserted.id,
     });
 

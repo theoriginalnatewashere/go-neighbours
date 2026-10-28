@@ -396,10 +396,10 @@ export type NavItem = {
 };
 
 export const defaultNavItems: NavItem[] = [
-  { id: "home", label: "Home", to: "/home", icon: Home },
-  { id: "explore", label: "Browse", to: "/browse", icon: Search },
-  { id: "messages", label: "Messages", to: "/messages", icon: MessageCircle },
-  { id: "profile", label: "Profile", to: "/profile", icon: User },
+  { id: "home", label: "Home", to: "/app/home", icon: Home },
+  { id: "explore", label: "Browse", to: "/app/browse", icon: Search },
+  { id: "messages", label: "Messages", to: "/app/messages", icon: MessageCircle },
+  { id: "profile", label: "Profile", to: "/app/profile", icon: User },
 ];
 
 export function BottomNav({

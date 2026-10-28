@@ -93,13 +93,13 @@ export function Onboarding() {
 
         <div className="mt-8 space-y-3">
           <Link
-            to="/auth"
+            to="/app/auth"
             className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-medium text-[15px] flex items-center justify-center active:scale-[0.99] transition shadow-sm"
           >
             Get Started
           </Link>
           <Link
-            to="/auth"
+            to="/app/auth"
             className="w-full h-12 rounded-2xl bg-card border border-border text-foreground font-medium text-[15px] flex items-center justify-center gap-2 active:scale-[0.99] transition"
           >
             <GoogleIcon />

@@ -131,13 +131,13 @@ export default function Notifications() {
 
   return (
     <MobileShell>
-      <ScreenHeader title="Notifications" backTo="/home" />
+      <ScreenHeader title="Notifications" backTo="/app/home" />
 
       <main className="flex-1 space-y-4 px-4 pt-2 pb-24">
         <VerificationCard
           status={verification?.status ?? "unverified"}
           reviewerNote={verification?.reviewerNote ?? null}
-          onResubmit={() => navigate({ to: "/verify-address" })}
+          onResubmit={() => navigate({ to: "/app/verify-address" })}
         />
 
         <section className="rounded-2xl bg-card p-4 shadow-sm">
@@ -346,7 +346,7 @@ function VerificationCard({
           )}
           {status === "pending" && (
             <Link
-              to="/verify-address/submitted"
+              to="/app/verify-address/submitted"
               className="mt-3 inline-flex items-center text-sm font-medium text-primary hover:underline"
             >
               View submitted details

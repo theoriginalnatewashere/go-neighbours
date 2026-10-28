@@ -7,7 +7,7 @@ const chatSearchSchema = z.object({
   conv: z.string().uuid().optional(),
 });
 
-export const Route = createFileRoute("/_authenticated/chat/$id")({
+export const Route = createFileRoute("/app/_authenticated/chat/$id")({
   validateSearch: chatSearchSchema,
   head: () => ({
     meta: [

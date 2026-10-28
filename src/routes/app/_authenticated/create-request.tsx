@@ -3,7 +3,7 @@ import CreateRequest from "@/app/components/CreateRequest";
 
 type Search = { edit?: string };
 
-export const Route = createFileRoute("/_authenticated/create-request")({
+export const Route = createFileRoute("/app/_authenticated/create-request")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     edit: typeof s.edit === "string" ? s.edit : undefined,
   }),

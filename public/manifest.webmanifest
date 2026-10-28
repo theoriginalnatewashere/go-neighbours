@@ -1,7 +1,7 @@
 {
   "name": "Go Neighbours",
   "short_name": "Go Neighbours",
-  "start_url": "/home",
+  "start_url": "/app/home",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

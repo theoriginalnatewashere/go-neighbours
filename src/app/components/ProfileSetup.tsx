@@ -135,7 +135,7 @@ export function ProfileSetup() {
         .eq("id", userId);
       if (error) throw error;
       toast.success("Profile saved");
-      navigate({ to: alreadyOnboarded ? "/profile" : "/verify-address" });
+      navigate({ to: alreadyOnboarded ? "/app/profile" : "/app/verify-address" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save profile");
     } finally {
@@ -157,7 +157,7 @@ export function ProfileSetup() {
         <div className="flex items-center gap-3 mb-5">
           <button
             type="button"
-            onClick={() => navigate({ to: alreadyOnboarded ? "/profile" : "/location/cluster" })}
+            onClick={() => navigate({ to: alreadyOnboarded ? "/app/profile" : "/app/location/cluster" })}
             aria-label="Go back"
             className="h-10 w-10 -ml-2 flex items-center justify-center rounded-full hover:bg-secondary active:scale-95 transition"
           >
