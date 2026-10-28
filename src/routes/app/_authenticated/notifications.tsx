@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Notifications from "@/app/components/Notifications";
 
-export const Route = createFileRoute("/_authenticated/notifications")({
+export const Route = createFileRoute("/app/_authenticated/notifications")({
   head: () => ({
     meta: [
       { title: "Notifications — Go Neighbours" },

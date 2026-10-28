@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import NeighborProfile from "@/app/components/NeighborProfile";
 
-export const Route = createFileRoute("/neighbor/$id")({
+export const Route = createFileRoute("/app/neighbor/$id")({
   head: () => ({
     meta: [
       { title: "Neighbour — Go Neighbours" },

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminVerifications } from "@/app/components/AdminVerifications";
 
-export const Route = createFileRoute("/_authenticated/admin/verifications")({
+export const Route = createFileRoute("/app/_authenticated/admin/verifications")({
   head: () => ({
     meta: [
       { title: "Verification review — Go Neighbours" },

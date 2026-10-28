@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import UserProfile from "@/app/components/UserProfile";
 import { guardSignedIn } from "@/lib/authGuard";
 
-export const Route = createFileRoute("/profile")({
+export const Route = createFileRoute("/app/profile")({
   ssr: false,
   beforeLoad: guardSignedIn,
   head: () => ({

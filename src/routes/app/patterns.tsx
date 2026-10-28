@@ -11,7 +11,7 @@ import {
   TrustBadge,
 } from "@/app/components/patterns";
 
-export const Route = createFileRoute("/patterns")({
+export const Route = createFileRoute("/app/patterns")({
   head: () => ({
     meta: [
       { title: "UI Patterns · Go Neighbours" },

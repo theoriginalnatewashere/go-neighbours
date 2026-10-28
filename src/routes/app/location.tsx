@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LocationPermission, LOCATION_SKIPPED_KEY } from "@/app/components/LocationPermission";
 import { guardSignedIn } from "@/lib/authGuard";
 
-export const Route = createFileRoute("/location")({
+export const Route = createFileRoute("/app/location")({
   ssr: false,
   beforeLoad: async () => {
     await guardSignedIn();

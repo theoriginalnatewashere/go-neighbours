@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import EnhancedHome from "@/app/components/EnhancedHome";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/home")({
+export const Route = createFileRoute("/app/_authenticated/home")({
   beforeLoad: async ({ context }) => {
     const userId = (context as { user?: { id: string } }).user?.id;
     if (!userId) return;

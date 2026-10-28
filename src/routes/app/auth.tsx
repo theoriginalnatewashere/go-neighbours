@@ -8,7 +8,7 @@ function safeNext(v: unknown): string | undefined {
   return v.startsWith("/") && !v.startsWith("//") ? v : undefined;
 }
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/app/auth")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>): { next?: string } => ({ next: safeNext(s.next) }),
   beforeLoad: async ({ search }) => {

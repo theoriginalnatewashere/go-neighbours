@@ -4,7 +4,7 @@ import Success from "@/app/components/Success";
 
 const search = z.object({ kind: z.string().optional() });
 
-export const Route = createFileRoute("/success")({
+export const Route = createFileRoute("/app/success")({
   validateSearch: search,
   head: () => ({
     meta: [

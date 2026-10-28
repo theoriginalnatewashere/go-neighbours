@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ClusterAssigned } from "@/app/components/ClusterAssigned";
 import { guardSignedIn } from "@/lib/authGuard";
 
-export const Route = createFileRoute("/location/cluster")({
+export const Route = createFileRoute("/app/location/cluster")({
   ssr: false,
   beforeLoad: guardSignedIn,
   head: () => ({

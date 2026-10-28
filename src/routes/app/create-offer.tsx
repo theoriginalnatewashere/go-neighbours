@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import CreateOffer from "@/app/components/CreateOffer";
 
-export const Route = createFileRoute("/create-offer")({
+export const Route = createFileRoute("/app/create-offer")({
   head: () => ({
     meta: [
       { title: "New offer — Go Neighbours" },

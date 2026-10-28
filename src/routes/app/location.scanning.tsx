@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ClusterScanning } from "@/app/components/ClusterScanning";
 import { guardSignedIn } from "@/lib/authGuard";
 
-export const Route = createFileRoute("/location/scanning")({
+export const Route = createFileRoute("/app/location/scanning")({
   ssr: false,
   beforeLoad: guardSignedIn,
   head: () => ({
