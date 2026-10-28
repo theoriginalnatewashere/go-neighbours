@@ -74,7 +74,7 @@ export function AuthSignUp() {
       // Return to /auth so its beforeLoad awaits session detection (PKCE code
       // exchange) and then routes via profileRouting — never redirecting before
       // the session is established.
-      const redirectTo = `${window.location.origin}/auth${
+      const redirectTo = `${window.location.origin}/app/auth${
         next ? `?next=${encodeURIComponent(next)}` : ""
       }`;
       const { error } = await supabase.auth.signInWithOAuth({
